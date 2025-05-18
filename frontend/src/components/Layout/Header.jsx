@@ -78,7 +78,7 @@ const Header = () => {
           </ul>
           <div className={styles.authButtons}>
             <Link to="/login" className={styles.btnWhite}>Iniciar sesión</Link>
-            <Link to="/registro" className={styles.btnPrimary}>Registrarse</Link>
+            <Link to="/register" className={styles.btnPrimary}>Registrarse</Link>
           </div>
         </nav>
       </div>
