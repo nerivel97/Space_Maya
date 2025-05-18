@@ -1,4 +1,4 @@
-import styles from './Leyendas.module.css';
+import styles from '../styles/Leyendas.module.css';
 import Card from '../components/MYLComponent/card'
 
 const Leyendas = () => {

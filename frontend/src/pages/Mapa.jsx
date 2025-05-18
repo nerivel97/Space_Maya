@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.fullscreen/Control.FullScreen.css';
-import './Mapa.css';
+import '../styles/Mapa.css';
 
 export default function Mapa() {
   const mapRef = useRef(null);

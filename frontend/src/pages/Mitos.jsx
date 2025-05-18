@@ -1,4 +1,4 @@
-import styles from './Mitos.module.css';
+import styles from '../styles/Mitos.module.css';
 import Card from '../components/MYLComponent/card'
 
 const Mitos = () => {

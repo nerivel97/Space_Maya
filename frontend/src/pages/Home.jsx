@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FaBookOpen, FaMapMarkedAlt, FaGamepad, FaArrowRight } from 'react-icons/fa';
-import styles from './Home.module.css';
+import styles from '../styles/Home.module.css';
 
 
 const Home = () => {
