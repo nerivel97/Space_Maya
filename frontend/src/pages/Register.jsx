@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useAuth } from '../context/useAuth';
+import  useAuth  from '../context/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from '../styles/Register.module.css';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
+
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
     try {
-      await register(email, password, isAdmin);
+      await register(email, password);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Error al registrar usuario');
@@ -44,15 +44,6 @@ export default function Register() {
             className={styles.input}
             required
           />
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={isAdmin}
-              onChange={(e) => setIsAdmin(e.target.checked)}
-              className={styles.checkbox}
-            />
-            ¿Registrarse como administrador?
-          </label>
           <button type="submit" className={styles.button}>Registrarse</button>
         </form>
         <p className={styles.link}>

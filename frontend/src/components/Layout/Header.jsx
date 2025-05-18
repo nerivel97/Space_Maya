@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { FaBars } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaBars, FaUserCircle, FaChevronDown } from 'react-icons/fa';
+import useAuth from '../../context/useAuth';
 import styles from './Header.module.css';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  const toggleProfile = () => setIsProfileOpen(!isProfileOpen);
 
-  // Función para determinar si un enlace está activo
   const isActive = (path) => {
-    // Caso especial para rutas anidadas
     if (path === '/herramientas' && location.pathname.startsWith('/herramientas')) {
       return true;
     }
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    setIsProfileOpen(false);
   };
 
   return (
@@ -76,10 +83,44 @@ const Header = () => {
               </Link>
             </li>
           </ul>
-          <div className={styles.authButtons}>
-            <Link to="/login" className={styles.btnWhite}>Iniciar sesión</Link>
-            <Link to="/register" className={styles.btnPrimary}>Registrarse</Link>
-          </div>
+
+          {currentUser ? (
+            <div className={styles.profileContainer}>
+              <button 
+                className={styles.profileButton}
+                onClick={toggleProfile}
+                aria-label="Perfil de usuario"
+              >
+                <FaUserCircle className={styles.profileIcon} />
+                <span className={styles.profileName}>
+                  Mi cuenta <FaChevronDown className={`${styles.dropdownIcon} ${isProfileOpen ? styles.rotate : ''}`} />
+                </span>
+              </button>
+              
+              {isProfileOpen && (
+                <div className={styles.profileDropdown}>
+                  <Link 
+                    to="/perfil" 
+                    className={styles.dropdownItem}
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    Perfil
+                  </Link>
+                  <button 
+                    className={styles.dropdownItem}
+                    onClick={handleLogout}
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={styles.authButtons}>
+              <Link to="/login" className={styles.btnWhite}>Iniciar sesión</Link>
+              <Link to="/register" className={styles.btnPrimary}>Registrarse</Link>
+            </div>
+          )}
         </nav>
       </div>
     </header>

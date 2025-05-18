@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/useAuth';
+import useAuth  from '../context/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from '../styles/Login.module.css';
 

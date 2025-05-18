@@ -1,10 +1,10 @@
 import pool from '../config/db.js';
 
 class User {
-  static async create({ email, password, isAdmin = false }) {
+  static async create({ email, password }) {
     const [result] = await pool.execute(
-      'INSERT INTO users (email, password, isAdmin) VALUES (?, ?, ?)',
-      [email, password, isAdmin]
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, password]
     );
     return result.insertId;
   }

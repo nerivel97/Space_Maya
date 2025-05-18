@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { AuthContext } from './AuthContext';
 import api from '../api/api';
 import { jwtDecode } from 'jwt-decode';
+import AuthContext from './AuthContext';
 
-export function AuthProvider({ children }) {
+const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Inicializa la autenticación al cargar
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
@@ -15,8 +15,8 @@ export function AuthProvider({ children }) {
         try {
           const decoded = jwtDecode(token);
           setCurrentUser({ id: decoded.userId });
-          setIsAdmin(decoded.isAdmin);
           
+          // Verificación opcional con el backend
           await api.get('/auth/verify');
         } catch (error) {
           localStorage.removeItem('token');
@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
     initializeAuth();
   }, []);
 
+  // Función para iniciar sesión
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
@@ -36,7 +37,6 @@ export function AuthProvider({ children }) {
       
       const decoded = jwtDecode(response.data.token);
       setCurrentUser({ id: decoded.userId });
-      setIsAdmin(decoded.isAdmin);
       
       return true;
     } catch (error) {
@@ -45,18 +45,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (email, password, isAdmin = false) => {
+  // Función para registrarse
+  const register = async (email, password) => {
     try {
-      const response = await api.post('/auth/register', { 
-        email, 
-        password, 
-        isAdmin 
-      });
+      const response = await api.post('/auth/register', { email, password });
       localStorage.setItem('token', response.data.token);
       
       const decoded = jwtDecode(response.data.token);
       setCurrentUser({ id: decoded.userId });
-      setIsAdmin(decoded.isAdmin);
       
       return true;
     } catch (error) {
@@ -65,16 +61,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Función para cerrar sesión
   const logout = () => {
     localStorage.removeItem('token');
     setCurrentUser(null);
-    setIsAdmin(false);
-    // Eliminamos la navegación directa aquí
   };
 
+  // Valor que proveerá el contexto
   const value = {
     currentUser,
-    isAdmin,
     loading,
     login,
     register,
@@ -86,4 +81,6 @@ export function AuthProvider({ children }) {
       {!loading && children}
     </AuthContext.Provider>
   );
-}
+};
+
+export default AuthProvider;
