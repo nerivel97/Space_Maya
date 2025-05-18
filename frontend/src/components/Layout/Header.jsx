@@ -29,10 +29,10 @@ const Header = () => {
               <Link to="/" className={`${styles.navLink} ${styles.active}`}>Inicio</Link>
             </li>
             <li className={styles.navItem}>
-              <Link to="/cursos" className={styles.navLink}>Cursos</Link>
+              <Link to="/cursos" className={styles.navLink}>Aprende</Link>
             </li>
             <li className={styles.navItem}>
-              <Link to="/recursos" className={styles.navLink}>Recursos</Link>
+              <Link to="/herramientas" className={styles.navLink}>Herramientas</Link>
             </li>
             <li className={styles.navItem}>
               <Link to="/sobre-nosotros" className={styles.navLink}>Sobre Nosotros</Link>

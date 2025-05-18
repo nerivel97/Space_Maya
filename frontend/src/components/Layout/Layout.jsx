@@ -1,13 +1,14 @@
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
+import './Layout.module.css'; // Asegúrate de tener este archivo
 
 const Layout = () => {
   return (
-    <div className="app-container">
+    <div className="app-layout">
       <Header />
       <main className="main-content">
-        <Outlet /> {/* Aquí se inyectarán las rutas hijas */}
+        <Outlet />
       </main>
       <Footer />
     </div>

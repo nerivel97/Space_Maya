@@ -2,17 +2,17 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import Mitos_Leyendas from './pages/Mitos_Leyendas';
-// Importa otras páginas aquí
-import './App.css'; // Estilos globales
+import Map from './pages/Mapa';
+import './App.css';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}> {/* Layout envuelve todas las rutas */}
+        <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="/Mitos_leyendas" element={<Mitos_Leyendas />} />  {/* Ruta raíz */}
-          {/* Agrega más rutas aquí */}
+          <Route path="mitos_leyendas" element={<Mitos_Leyendas />} />
+          <Route path="herramientas/mapa" element={<Map />} />
         </Route>
       </Routes>
     </Router>

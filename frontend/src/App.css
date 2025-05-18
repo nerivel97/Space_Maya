@@ -56,3 +56,16 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+/* Asegura que el header esté siempre encima */
+.header {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Mayor que los controles del mapa */
+  /* Mantén el resto de tus estilos del header */
+}
+
+
+

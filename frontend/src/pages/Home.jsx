@@ -35,7 +35,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Mapa Dinámico</h3>
               <p className={styles.cardText}>Descubre las regiones mayas y sus variantes lingüísticas a través de nuestro mapa interactivo.</p>
-              <Link to="/mapa" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/herramientas/mapa" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
             
             <div className={styles.featureCard}>

@@ -26,8 +26,8 @@ const Footer = () => {
             <h4 className={styles.footerTitle}>Enlaces rápidos</h4>
             <ul className={styles.footerLinks}>
               <li><Link to="/">Inicio</Link></li>
-              <li><Link to="/cursos">Cursos</Link></li>
-              <li><Link to="/recursos">Recursos</Link></li>
+              <li><Link to="/aprende">Aprende</Link></li>
+              <li><Link to="/herramientas">Herramientas</Link></li>
               <li><Link to="/blog">Blog</Link></li>
               <li><Link to="/contacto">Contacto</Link></li>
             </ul>

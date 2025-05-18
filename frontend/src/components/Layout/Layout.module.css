@@ -1,0 +1,11 @@
+/* Define la altura del header */
+:root {
+  --header-height: 80px; /* Ajusta según la altura real de tu header */
+}
+
+/* Asegura que el footer se quede abajo */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
