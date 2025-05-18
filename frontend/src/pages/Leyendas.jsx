@@ -18,6 +18,13 @@ const Leyendas = () => {
           onClick={() => alert('¡No hace nada pero esta chido apoco no? xD!')}
         />
 
+        <Card
+          image=""
+          title=""
+          description="Aqui deberian ir las leyendas jeje"
+          onClick={() => alert('¡No hace nada pero esta chido apoco no? xD!')}
+        />
+
       </div>
     </div>
 
