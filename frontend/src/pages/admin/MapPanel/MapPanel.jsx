@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import styles from '../../../styles/admin/MapPanel.module.css';
-import api from '../../../api/api';
+import api from '../../../api/api'; // Importa la API mejorada
 import ModalWrapper from '../../../pages/admin/MapPanel/ModalWrapper';
 
 // Configuración de iconos para Leaflet
@@ -32,7 +32,9 @@ const MapPanel = () => {
   const [markers, setMarkers] = useState([]);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMarker, setSelectedMarker] = useState(null); // Nuevo estado para el marcador seleccionado
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentMarkerId, setCurrentMarkerId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,47 +42,33 @@ const MapPanel = () => {
     features: '',
     images: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Cargar marcadores existentes
-  // Cargar marcadores existentes con mejor manejo de errores
+  // Cargar marcadores existentes con manejo mejorado de errores
   useEffect(() => {
     const fetchMarkers = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        console.log('Iniciando carga de marcadores...');
-        const response = await api.get('/markers');
-        console.log('Marcadores recibidos:', response.data);
-        setMarkers(response.data);
-      } catch (error) {
-        console.error('Error completo al cargar marcadores:', error);
-
-        if (error.response) {
-          // El servidor respondió con un código de estado fuera del rango 2xx
-          console.error('Datos del error:', error.response.data);
-          console.error('Estado del error:', error.response.status);
-          console.error('Cabeceras del error:', error.response.headers);
-
-          if (error.response.status === 401) {
-            // Manejar específicamente errores de autenticación
-            console.error('No autorizado - redirigiendo a login');
-            // Redirigir a login si es necesario
-          }
-        } else if (error.request) {
-          // La solicitud fue hecha pero no se recibió respuesta
-          console.error('No se recibió respuesta del servidor');
-        } else {
-          // Algo pasó al configurar la solicitud
-          console.error('Error al configurar la solicitud:', error.message);
-        }
+        const markersData = await api.get('/markers');
+        setMarkers(markersData);
+      } catch (err) {
+        console.error('Error loading markers:', err);
+        setError(err.message || 'Error al cargar marcadores');
+        // Mostrar notificación al usuario si es necesario
+      } finally {
+        setLoading(false);
       }
     };
-
+    
     fetchMarkers();
   }, []);
 
   // Función para agregar marcadores al mapa
   const addMarkerToMap = useCallback((marker, index) => {
     if (!mapInstance.current) return;
-
+    
     const newMarker = L.marker(marker.position, {
       icon: L.divIcon({
         className: styles.customMarker,
@@ -89,21 +77,27 @@ const MapPanel = () => {
       })
     }).addTo(mapInstance.current);
 
-    // Popup con información básica
     newMarker.bindPopup(`
       <b>${marker.title}</b><br>
       <small>${marker.location}</small>
+      <div class="${styles.popupActions}">
+        <button onclick="event.stopPropagation(); window.dispatchEvent(new CustomEvent('editMarker', { detail: ${marker.id} }));">
+          Editar
+        </button>
+      </div>
     `);
 
-    // Evento para seleccionar marcador
     newMarker.on('click', () => {
-      setSelectedMarker(marker);
+      const foundMarker = markers.find(m => m.id === marker.id);
+      if (foundMarker) {
+        setSelectedMarker(foundMarker);
+      }
     });
 
     return newMarker;
-  }, []);
+  }, [markers]);
 
-  // Inicializar mapa
+  // Inicializar mapa (igual que antes)
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -130,15 +124,25 @@ const MapPanel = () => {
         const handleMapClick = (e) => {
           setSelectedPosition([e.latlng.lat, e.latlng.lng]);
           setIsModalOpen(true);
-          setSelectedMarker(null); // Limpiar selección al hacer click en el mapa
+          setIsEditMode(false);
+          setSelectedMarker(null);
         };
 
         mapInstance.current.on('click', handleMapClick);
+
+        window.addEventListener('editMarker', (e) => {
+          const markerId = e.detail;
+          const markerToEdit = markers.find(m => m.id === markerId);
+          if (markerToEdit) {
+            handleEditMarker(markerToEdit);
+          }
+        });
 
         return () => {
           if (mapInstance.current) {
             mapInstance.current.off('click', handleMapClick);
           }
+          window.removeEventListener('editMarker', () => {});
         };
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -157,9 +161,9 @@ const MapPanel = () => {
         mapInstance.current = null;
       }
     };
-  }, []);
+  }, [markers]);
 
-  // Actualizar marcadores
+  // Actualizar marcadores en el mapa
   useEffect(() => {
     if (!mapInstance.current) return;
 
@@ -179,10 +183,12 @@ const MapPanel = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Crear nuevo marcador (con manejo mejorado de errores)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPosition) return;
 
+    setLoading(true);
     try {
       const newMarker = {
         position: selectedPosition,
@@ -193,34 +199,118 @@ const MapPanel = () => {
         images: formData.images.split('\n').filter(url => url.trim())
       };
 
-      const response = await api.post('/markers', newMarker);
-      setMarkers(prev => [...prev, response.data]);
-
-      setFormData({
-        title: '',
-        description: '',
-        location: '',
-        features: '',
-        images: ''
-      });
-      setSelectedPosition(null);
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error creating marker:', error);
-      if (error.response?.status === 500) {
-        console.error('Error del servidor al crear marcador');
-      }
+      const createdMarker = await api.post('/markers', newMarker);
+      setMarkers(prev => [...prev, createdMarker]);
+      resetForm();
+    } catch (err) {
+      console.error('Error creating marker:', err);
+      setError(err.message || 'Error al crear marcador');
+      // Aquí podrías mostrar una notificación al usuario
+    } finally {
+      setLoading(false);
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  // Actualizar marcador existente
+  const handleUpdateMarker = async (e) => {
+    e.preventDefault();
+    if (!currentMarkerId) return;
+
+    setLoading(true);
+    try {
+      const updatedMarker = {
+        position: selectedPosition,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        features: formData.features.split('\n').filter(f => f.trim()),
+        images: formData.images.split('\n').filter(url => url.trim())
+      };
+
+      const updated = await api.put(`/markers/${currentMarkerId}`, updatedMarker);
+      setMarkers(prev => prev.map(m => m.id === currentMarkerId ? updated : m));
+      resetForm();
+    } catch (err) {
+      console.error('Error updating marker:', err);
+      setError(err.message || 'Error al actualizar marcador');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Eliminar marcador
+  const handleDeleteMarker = async () => {
+    if (!selectedMarker && !currentMarkerId) return;
+    
+    const markerId = selectedMarker?.id || currentMarkerId;
+    setLoading(true);
+    try {
+      await api.delete(`/markers/${markerId}`);
+      setMarkers(prev => prev.filter(m => m.id !== markerId));
+      resetForm();
+    } catch (err) {
+      console.error('Error deleting marker:', err);
+      setError(err.message || 'Error al eliminar marcador');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Preparar formulario para edición
+  const handleEditMarker = (marker) => {
+    setFormData({
+      title: marker.title,
+      description: marker.description,
+      location: marker.location,
+      features: marker.features.join('\n'),
+      images: marker.images.join('\n')
+    });
+    setSelectedPosition(marker.position);
+    setCurrentMarkerId(marker.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+    setSelectedMarker(null);
+  };
+
+  // Resetear formulario
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      location: '',
+      features: '',
+      images: ''
+    });
     setSelectedPosition(null);
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setCurrentMarkerId(null);
+    setError(null);
+  };
+
+  // Cerrar modal
+  const closeModal = () => {
+    resetForm();
   };
 
   return (
     <AdminLayout>
       <div className={styles.mapPanelContainer}>
+        {/* Mostrar estado de carga o error */}
+        {loading && (
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingSpinner}></div>
+            <p>{isEditMode ? 'Actualizando marcador...' : 'Cargando...'}</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className={styles.errorAlert}>
+            {error}
+            <button onClick={() => setError(null)}>×</button>
+          </div>
+        )}
+
         <div className={styles.panelLayout}>
           <div
             ref={mapRef}
@@ -232,13 +322,7 @@ const MapPanel = () => {
             {selectedMarker ? (
               <div className={styles.markerDetails}>
                 <h2>Detalles del Marcador</h2>
-                <button
-                  className={styles.backButton}
-                  onClick={() => setSelectedMarker(null)}
-                >
-                  ← Volver a la lista
-                </button>
-
+                
                 <div className={styles.detailSection}>
                   <h3>{selectedMarker.title}</h3>
                   <p><strong>Coordenadas:</strong> Lat: {selectedMarker.position[0].toFixed(4)}, Lng: {selectedMarker.position[1].toFixed(4)}</p>
@@ -277,6 +361,34 @@ const MapPanel = () => {
                     </div>
                   )}
                 </div>
+
+                <div className={styles.markerActions}>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => handleEditMarker(selectedMarker)}
+                    disabled={loading}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => {
+                      if (confirm("¿Estás seguro de eliminar este marcador?")) {
+                        handleDeleteMarker();
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    Eliminar
+                  </button>
+                  <button
+                    className={styles.backButton}
+                    onClick={() => setSelectedMarker(null)}
+                    disabled={loading}
+                  >
+                    ← Volver a la lista
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -288,7 +400,7 @@ const MapPanel = () => {
                       {markers.map((marker, index) => (
                         <li
                           key={index}
-                          onClick={() => setSelectedMarker(marker)}
+                          onClick={() => !loading && setSelectedMarker(marker)}
                           className={styles.markerListItem}
                         >
                           <strong>{marker.title}</strong> - {marker.location}
@@ -308,15 +420,22 @@ const MapPanel = () => {
       <ModalWrapper
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        contentLabel="Agregar nuevo marcador"
+        contentLabel={isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}
       >
         <div className={styles.modalContent}>
-          <h2>Agregar nuevo marcador</h2>
+          <h2>{isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}</h2>
           <p className={styles.positionInfo}>
             Posición seleccionada: {selectedPosition && `Lat: ${selectedPosition[0].toFixed(2)}, Lng: ${selectedPosition[1].toFixed(2)}`}
           </p>
 
-          <form onSubmit={handleSubmit} className={styles.markerForm}>
+          {error && (
+            <div className={styles.modalError}>
+              {error}
+              <button onClick={() => setError(null)}>×</button>
+            </div>
+          )}
+
+          <form onSubmit={isEditMode ? handleUpdateMarker : handleSubmit} className={styles.markerForm}>
             <div className={styles.formGroup}>
               <label>Título:</label>
               <input
@@ -326,6 +445,7 @@ const MapPanel = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="Ej: Templo Principal"
+                disabled={loading}
               />
             </div>
 
@@ -338,6 +458,7 @@ const MapPanel = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="Ej: Zona Arqueológica Norte"
+                disabled={loading}
               />
             </div>
 
@@ -349,6 +470,7 @@ const MapPanel = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="Descripción detallada del lugar..."
+                disabled={loading}
               />
             </div>
 
@@ -359,6 +481,7 @@ const MapPanel = () => {
                 value={formData.features}
                 onChange={handleInputChange}
                 placeholder="Altura: 30m\nAño construcción: 900 d.C."
+                disabled={loading}
               />
             </div>
 
@@ -370,22 +493,41 @@ const MapPanel = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="https://ejemplo.com/imagen1.jpg\nhttps://ejemplo.com/imagen2.jpg"
+                disabled={loading}
               />
             </div>
 
             <div className={styles.formActions}>
+              {isEditMode && (
+                <button
+                  type="button"
+                  className={styles.deleteButton}
+                  onClick={() => {
+                    if (confirm("¿Estás seguro de eliminar este marcador?")) {
+                      handleDeleteMarker();
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  Eliminar
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.cancelButton}
                 onClick={closeModal}
+                disabled={loading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 className={styles.saveButton}
+                disabled={loading}
               >
-                Guardar Marcador
+                {loading ? (
+                  <span className={styles.buttonSpinner}></span>
+                ) : isEditMode ? "Actualizar" : "Guardar"}
               </button>
             </div>
           </form>

@@ -2,16 +2,11 @@ import Marker from '../models/Marker.js';
 
 export const getMarkers = async (req, res) => {
   try {
-    console.log('Intentando obtener marcadores...'); // Log de depuración
     const markers = await Marker.getAll();
-    console.log('Marcadores obtenidos:', markers.length); // Log de depuración
     res.json(markers);
   } catch (error) {
-    console.error('Error detallado al obtener marcadores:', error);
-    res.status(500).json({ 
-      message: 'Error al obtener marcadores',
-      error: process.env.NODE_ENV === 'development' ? error.message : null
-    });
+    console.error('Error getting markers:', error);
+    res.status(500).json({ message: 'Error al obtener marcadores' });
   }
 };
 
@@ -20,6 +15,35 @@ export const createMarker = async (req, res) => {
     const newMarker = await Marker.create(req.body);
     res.status(201).json(newMarker);
   } catch (error) {
+    console.error('Error creating marker:', error);
     res.status(500).json({ message: 'Error al crear marcador' });
+  }
+};
+
+export const updateMarker = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedMarker = await Marker.update(id, req.body);
+    if (!updatedMarker) {
+      return res.status(404).json({ message: 'Marcador no encontrado' });
+    }
+    res.json(updatedMarker);
+  } catch (error) {
+    console.error('Error updating marker:', error);
+    res.status(500).json({ message: 'Error al actualizar marcador' });
+  }
+};
+
+export const deleteMarker = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const success = await Marker.delete(id);
+    if (!success) {
+      return res.status(404).json({ message: 'Marcador no encontrado' });
+    }
+    res.json({ message: 'Marcador eliminado correctamente' });
+  } catch (error) {
+    console.error('Error deleting marker:', error);
+    res.status(500).json({ message: 'Error al eliminar marcador' });
   }
 };

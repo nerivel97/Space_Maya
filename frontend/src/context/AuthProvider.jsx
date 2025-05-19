@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import api from '../api/api';
 import { jwtDecode } from 'jwt-decode';
 import AuthContext from './AuthContext';
+import axios from 'axios';
 
 const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -14,15 +16,21 @@ const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const decoded = jwtDecode(token);
-          setCurrentUser({ id: decoded.userId });
-          setIsAdmin(decoded.isAdmin);
+          setCurrentUser({ id: decoded.userId, email: decoded.email });
+          setIsAdmin(decoded.isAdmin || false);
           
           // Verificación adicional con el backend
-          const response = await api.get('/auth/verify-admin');
-          setIsAdmin(response.data.isAdmin);
+          try {
+            const adminStatus = await api.get('/auth/verify-admin');
+            setIsAdmin(adminStatus.isAdmin || false);
+          } catch (error) {
+            console.error('Admin verification error:', error);
+            setIsAdmin(false);
+          }
         } catch (error) {
+          console.error('Token verification error:', error);
           localStorage.removeItem('token');
-          console.error('Error verifying token:', error);
+          setAuthError('La sesión ha expirado');
         }
       }
       setLoading(false);
@@ -32,32 +40,65 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      
-      const decoded = jwtDecode(response.data.token);
-      setCurrentUser({ id: decoded.userId });
-      setIsAdmin(decoded.isAdmin);
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+  try {
+    // Crear una instancia temporal de axios sin interceptores para el login
+    const authApi = axios.create({
+      baseURL: 'http://localhost:5000/api',
+      timeout: 10000
+    });
+
+    const response = await authApi.post('/auth/login', { email, password });
+    
+    if (!response.data.token) {
+      throw new Error('No se recibió token de autenticación');
     }
-  };
+
+    localStorage.setItem('token', response.data.token);
+    const decoded = jwtDecode(response.data.token);
+    
+    setCurrentUser({ 
+      id: decoded.userId, 
+      email: decoded.email 
+    });
+    setIsAdmin(decoded.isAdmin || false);
+    
+    return true;
+  } catch (error) {
+    console.error('Login error:', error);
+    let errorMessage = 'Credenciales incorrectas';
+    
+    if (error.response) {
+      // Manejar errores específicos del backend
+      errorMessage = error.response.data.message || errorMessage;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    throw new Error(errorMessage);
+  }
+};
 
   const register = async (email, password) => {
     try {
-      const response = await api.post('/auth/register', { email, password });
-      localStorage.setItem('token', response.data.token);
+      const { token } = await api.post('/auth/register', { email, password });
       
-      const decoded = jwtDecode(response.data.token);
-      setCurrentUser({ id: decoded.userId });
-      setIsAdmin(decoded.isAdmin);
+      if (!token) {
+        throw new Error('No se recibió token de autenticación');
+      }
+
+      localStorage.setItem('token', token);
+      const decoded = jwtDecode(token);
+      
+      setCurrentUser({ 
+        id: decoded.userId,
+        email: decoded.email
+      });
+      setIsAdmin(decoded.isAdmin || false);
+      
       return true;
     } catch (error) {
       console.error('Register error:', error);
-      throw error;
+      throw new Error(error.message || 'Error en el registro');
     }
   };
 
@@ -65,15 +106,18 @@ const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setCurrentUser(null);
     setIsAdmin(false);
+    setAuthError(null);
   };
 
   const value = {
     currentUser,
     isAdmin,
     loading,
+    authError,
     login,
     register,
-    logout
+    logout,
+    setAuthError
   };
 
   return (
