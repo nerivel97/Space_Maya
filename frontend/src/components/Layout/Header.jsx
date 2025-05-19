@@ -83,8 +83,8 @@ const Header = () => {
               </Link>
             </li>
 
-            {/* Enlace de Admin solo visible para administradores */}
-            {isAdmin && (
+            {/* Enlace de Admin - Solución 1: Usar null en lugar de false */}
+            {isAdmin ? (
               <li className={styles.navItem}>
                 <Link 
                   to="/admin" 
@@ -93,10 +93,11 @@ const Header = () => {
                   <FaCog className={styles.adminIcon} /> Admin
                 </Link>
               </li>
-            )}
+            ) : null}
           </ul>
 
-          {currentUser ? (
+          {/* Mostrar profileContainer solo si es usuario normal (no admin) */}
+          {currentUser && !isAdmin ? (
             <div className={styles.profileContainer}>
               <button 
                 className={styles.profileButton}
@@ -118,15 +119,6 @@ const Header = () => {
                   >
                     Perfil
                   </Link>
-                  {isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      className={styles.dropdownItem}
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      Panel Admin
-                    </Link>
-                  )}
                   <button 
                     className={styles.dropdownItem}
                     onClick={handleLogout}
@@ -136,12 +128,27 @@ const Header = () => {
                 </div>
               )}
             </div>
-          ) : (
+          ) : null}
+
+          {/* Mostrar botones de auth solo si no hay usuario logueado */}
+          {!currentUser ? (
             <div className={styles.authButtons}>
               <Link to="/login" className={styles.btnWhite}>Iniciar sesión</Link>
               <Link to="/register" className={styles.btnPrimary}>Registrarse</Link>
             </div>
-          )}
+          ) : null}
+
+          {/* Opción de logout minimalista para admin - Solución 2: Convertir a fragmento */}
+          {isAdmin ? (
+            <>
+              <button 
+                className={styles.adminLogoutButton}
+                onClick={handleLogout}
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : null}
         </nav>
       </div>
     </header>
