@@ -42,26 +42,45 @@ const MapPanel = () => {
   });
 
   // Cargar marcadores existentes
+  // Cargar marcadores existentes con mejor manejo de errores
   useEffect(() => {
     const fetchMarkers = async () => {
       try {
+        console.log('Iniciando carga de marcadores...');
         const response = await api.get('/markers');
+        console.log('Marcadores recibidos:', response.data);
         setMarkers(response.data);
       } catch (error) {
-        console.error('Error loading markers:', error);
-        // Manejo básico de error 500
-        if (error.response?.status === 500) {
-          console.error('Error del servidor. Verifica la conexión con la API.');
+        console.error('Error completo al cargar marcadores:', error);
+
+        if (error.response) {
+          // El servidor respondió con un código de estado fuera del rango 2xx
+          console.error('Datos del error:', error.response.data);
+          console.error('Estado del error:', error.response.status);
+          console.error('Cabeceras del error:', error.response.headers);
+
+          if (error.response.status === 401) {
+            // Manejar específicamente errores de autenticación
+            console.error('No autorizado - redirigiendo a login');
+            // Redirigir a login si es necesario
+          }
+        } else if (error.request) {
+          // La solicitud fue hecha pero no se recibió respuesta
+          console.error('No se recibió respuesta del servidor');
+        } else {
+          // Algo pasó al configurar la solicitud
+          console.error('Error al configurar la solicitud:', error.message);
         }
       }
     };
+
     fetchMarkers();
   }, []);
 
   // Función para agregar marcadores al mapa
   const addMarkerToMap = useCallback((marker, index) => {
     if (!mapInstance.current) return;
-    
+
     const newMarker = L.marker(marker.position, {
       icon: L.divIcon({
         className: styles.customMarker,
@@ -69,18 +88,18 @@ const MapPanel = () => {
         iconSize: [30, 30]
       })
     }).addTo(mapInstance.current);
-    
+
     // Popup con información básica
     newMarker.bindPopup(`
       <b>${marker.title}</b><br>
       <small>${marker.location}</small>
     `);
-    
+
     // Evento para seleccionar marcador
     newMarker.on('click', () => {
       setSelectedMarker(marker);
     });
-    
+
     return newMarker;
   }, []);
 
@@ -104,7 +123,7 @@ const MapPanel = () => {
 
         const bounds = [[0, 0], [1024, 1024]];
         const imageUrl = '/img/mapav2.png';
-        
+
         L.imageOverlay(imageUrl, bounds).addTo(mapInstance.current);
         mapInstance.current.fitBounds(bounds);
 
@@ -176,7 +195,7 @@ const MapPanel = () => {
 
       const response = await api.post('/markers', newMarker);
       setMarkers(prev => [...prev, response.data]);
-      
+
       setFormData({
         title: '',
         description: '',
@@ -205,28 +224,29 @@ const MapPanel = () => {
         <h1>Panel de Mapa Interactivo</h1>
 
         <div className={styles.panelLayout}>
-          <div 
-            ref={mapRef} 
+          <div
+            ref={mapRef}
             className={styles.mapContainer}
             style={{ height: '100%' }}
           />
-          
+
           <div className={styles.controlsPanel}>
             {selectedMarker ? (
               <div className={styles.markerDetails}>
                 <h2>Detalles del Marcador</h2>
-                <button 
+                <button
                   className={styles.backButton}
                   onClick={() => setSelectedMarker(null)}
                 >
                   ← Volver a la lista
                 </button>
-                
+
                 <div className={styles.detailSection}>
                   <h3>{selectedMarker.title}</h3>
+                  <p><strong>Coordenadas:</strong> Lat: {selectedMarker.position[0].toFixed(4)}, Lng: {selectedMarker.position[1].toFixed(4)}</p>
                   <p><strong>Ubicación:</strong> {selectedMarker.location}</p>
                   <p><strong>Descripción:</strong> {selectedMarker.description}</p>
-                  
+
                   {selectedMarker.features?.length > 0 && (
                     <div className={styles.featuresList}>
                       <h4>Características:</h4>
@@ -237,17 +257,21 @@ const MapPanel = () => {
                       </ul>
                     </div>
                   )}
-                  
+
                   {selectedMarker.images?.length > 0 && (
                     <div className={styles.imagesGallery}>
                       <h4>Imágenes:</h4>
                       <div className={styles.imagesContainer}>
                         {selectedMarker.images.map((imageUrl, index) => (
                           <div key={index} className={styles.imageWrapper}>
-                            <img 
-                              src={imageUrl} 
+                            <img
+                              src={imageUrl}
                               alt={`Imagen ${index + 1} de ${selectedMarker.title}`}
                               className={styles.markerImage}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/images/placeholder-image.jpg'
+                              }}
                             />
                           </div>
                         ))}
@@ -264,8 +288,8 @@ const MapPanel = () => {
                     <p>Total: {markers.length}</p>
                     <ul>
                       {markers.map((marker, index) => (
-                        <li 
-                          key={index} 
+                        <li
+                          key={index}
                           onClick={() => setSelectedMarker(marker)}
                           className={styles.markerListItem}
                         >
@@ -293,7 +317,7 @@ const MapPanel = () => {
           <p className={styles.positionInfo}>
             Posición seleccionada: {selectedPosition && `Lat: ${selectedPosition[0].toFixed(2)}, Lng: ${selectedPosition[1].toFixed(2)}`}
           </p>
-          
+
           <form onSubmit={handleSubmit} className={styles.markerForm}>
             <div className={styles.formGroup}>
               <label>Título:</label>
@@ -352,15 +376,15 @@ const MapPanel = () => {
             </div>
 
             <div className={styles.formActions}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={styles.cancelButton}
                 onClick={closeModal}
               >
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className={styles.saveButton}
               >
                 Guardar Marcador
