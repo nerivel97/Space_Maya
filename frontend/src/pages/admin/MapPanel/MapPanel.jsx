@@ -221,8 +221,6 @@ const MapPanel = () => {
   return (
     <AdminLayout>
       <div className={styles.mapPanelContainer}>
-        <h1>Panel de Mapa Interactivo</h1>
-
         <div className={styles.panelLayout}>
           <div
             ref={mapRef}

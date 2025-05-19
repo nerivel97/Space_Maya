@@ -1,25 +1,33 @@
 .adminContainer {
   display: flex;
   min-height: 100vh;
+  background-color: #f8fafc;
 }
 
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 250px; /* Igual al ancho del sidebar */
+  margin-left: 280px; /* Más ancho para el sidebar */
+  transition: margin 0.3s ease;
 }
 
 .contentWrapper {
   flex: 1;
-  padding: 20px;
-  background-color: #f5f7fa;
-  min-height: calc(100vh - 60px); /* Altura menos el navbar */
+  padding: 2rem;
+  min-height: calc(100vh - 60px);
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .mainContent {
     margin-left: 0;
+    padding-top: 70px; /* Espacio para el sidebar móvil */
+  }
+}
+
+@media (max-width: 768px) {
+  .contentWrapper {
+    padding: 1.5rem;
   }
 }

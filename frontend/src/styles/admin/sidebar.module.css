@@ -1,47 +1,120 @@
 .sidebar {
-  width: 250px;
-  background-color: #01b1ab;
+  width: 280px;
+  background: linear-gradient(180deg, #01b1ab 0%, #018d89 100%);
   color: white;
   height: 100vh;
   position: fixed;
-  padding: 20px 0;
+  padding: 1.5rem 0;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.logoContainer {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 1.5rem;
 }
 
 .logo {
-  padding: 0 20px 20px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.adminBadge {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+
+.nav {
+  padding: 0 0.5rem;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navItem {
+  margin-bottom: 0.5rem;
 }
 
 .link {
-  display: block;
-  padding: 12px 20px;
-  color: #ecf0f1;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: rgba(255,255,255,0.9);
   text-decoration: none;
-  transition: background-color 0.3s;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin: 0 0.5rem;
 }
 
 .link:hover {
-  background-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.15);
+  transform: translateX(5px);
 }
 
 .activeLink {
-  display: block;
-  padding: 12px 20px;
-  color: #ecf0f1;
-  text-decoration: none;
-  transition: background-color 0.3s;
-  background-color: #3498db;
-  border-left: 4px solid #2980b9;
+  background: rgba(255,255,255,0.2);
+  font-weight: 500;
+  transform: translateX(5px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Para móviles */
-@media (max-width: 768px) {
+.icon {
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
   .sidebar {
     width: 100%;
-    height: auto;
-    position: relative;
+    height: 70px;
+    bottom: 0;
+    top: auto;
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+  
+  .logoContainer {
+    display: none;
+  }
+  
+  .nav {
+    width: 100%;
+  }
+  
+  .navList {
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .navItem {
+    margin: 0;
+  }
+  
+  .link {
+    flex-direction: column;
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    margin: 0;
+  }
+  
+  .icon {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
+  }
+  
+  .link span {
+    display: none;
   }
 }
