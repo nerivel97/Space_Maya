@@ -5,9 +5,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const generateToken = (userId) => {
+const generateToken = (userId, isAdmin) => {
   return jwt.sign(
-    { userId },
+    { userId, isAdmin },
     process.env.JWT_SECRET,
     { expiresIn: '1d' }
   );
@@ -29,10 +29,11 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     const userId = await User.create({
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      isAdmin: false // Todos los nuevos registros son usuarios normales
     });
 
-    const token = generateToken(userId);
+    const token = generateToken(userId, false);
     res.status(201).json({ userId, token });
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar usuario' });
@@ -57,9 +58,25 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
-    const token = generateToken(user.id);
-    res.json({ userId: user.id, token });
+    const token = generateToken(user.id, user.isAdmin);
+    res.json({ 
+      userId: user.id, 
+      token,
+      isAdmin: user.isAdmin 
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error al iniciar sesión' });
+  }
+};
+
+export const verifyAdmin = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ isAdmin: false });
+    }
+    res.json({ isAdmin: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al verificar administrador' });
   }
 };

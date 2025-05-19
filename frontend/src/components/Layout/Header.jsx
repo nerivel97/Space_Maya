@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaUserCircle, FaChevronDown } from 'react-icons/fa';
+import { FaBars, FaUserCircle, FaChevronDown, FaCog } from 'react-icons/fa';
 import useAuth from '../../context/useAuth';
 import styles from './Header.module.css';
 
@@ -9,7 +9,7 @@ const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, isAdmin, logout } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleProfile = () => setIsProfileOpen(!isProfileOpen);
@@ -82,6 +82,18 @@ const Header = () => {
                 Contacto
               </Link>
             </li>
+
+            {/* Enlace de Admin solo visible para administradores */}
+            {isAdmin && (
+              <li className={styles.navItem}>
+                <Link 
+                  to="/admin" 
+                  className={`${styles.navLink} ${isActive('/admin') ? styles.active : ''}`}
+                >
+                  <FaCog className={styles.adminIcon} /> Admin
+                </Link>
+              </li>
+            )}
           </ul>
 
           {currentUser ? (
@@ -106,6 +118,15 @@ const Header = () => {
                   >
                     Perfil
                   </Link>
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      className={styles.dropdownItem}
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      Panel Admin
+                    </Link>
+                  )}
                   <button 
                     className={styles.dropdownItem}
                     onClick={handleLogout}

@@ -1,13 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
-import  AuthProvider  from './context/AuthProvider';
-import { PrivateRoute } from './components/PrivateRoute';
+import AuthProvider from './context/AuthProvider';
+import { PrivateRoute, AdminRoute } from './components/PrivateRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Mapa';
 import Mitos from './pages/Mitos';
 import Leyendas from './pages/Leyendas';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import './App.css';
 
 function App() {
@@ -20,7 +22,6 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             
-            {/* Rutas protegidas */}
             <Route path="/herramientas/mapa" element={
               <PrivateRoute>
                 <Map />
@@ -39,11 +40,16 @@ function App() {
               </PrivateRoute>
             } />
 
-            {/* Ejemplo de ruta solo para admin */}
             <Route path="/admin" element={
-              <PrivateRoute adminOnly={true}>
-                <div>Panel de administración</div>
-              </PrivateRoute>
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
+
+            <Route path="/admin/map-panel" element={
+              <AdminRoute>
+                <AdminMapPanel />
+              </AdminRoute>
             } />
           </Route>
         </Routes>

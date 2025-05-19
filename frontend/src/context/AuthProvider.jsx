@@ -5,9 +5,9 @@ import AuthContext from './AuthContext';
 
 const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Inicializa la autenticación al cargar
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
@@ -15,9 +15,11 @@ const AuthProvider = ({ children }) => {
         try {
           const decoded = jwtDecode(token);
           setCurrentUser({ id: decoded.userId });
+          setIsAdmin(decoded.isAdmin);
           
-          // Verificación opcional con el backend
-          await api.get('/auth/verify');
+          // Verificación adicional con el backend
+          const response = await api.get('/auth/verify-admin');
+          setIsAdmin(response.data.isAdmin);
         } catch (error) {
           localStorage.removeItem('token');
           console.error('Error verifying token:', error);
@@ -29,7 +31,6 @@ const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
-  // Función para iniciar sesión
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
@@ -37,7 +38,7 @@ const AuthProvider = ({ children }) => {
       
       const decoded = jwtDecode(response.data.token);
       setCurrentUser({ id: decoded.userId });
-      
+      setIsAdmin(decoded.isAdmin);
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -45,7 +46,6 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // Función para registrarse
   const register = async (email, password) => {
     try {
       const response = await api.post('/auth/register', { email, password });
@@ -53,7 +53,7 @@ const AuthProvider = ({ children }) => {
       
       const decoded = jwtDecode(response.data.token);
       setCurrentUser({ id: decoded.userId });
-      
+      setIsAdmin(decoded.isAdmin);
       return true;
     } catch (error) {
       console.error('Register error:', error);
@@ -61,15 +61,15 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // Función para cerrar sesión
   const logout = () => {
     localStorage.removeItem('token');
     setCurrentUser(null);
+    setIsAdmin(false);
   };
 
-  // Valor que proveerá el contexto
   const value = {
     currentUser,
+    isAdmin,
     loading,
     login,
     register,

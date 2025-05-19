@@ -1,0 +1,47 @@
+.sidebar {
+  width: 250px;
+  background-color: #01b1ab;
+  color: white;
+  height: 100vh;
+  position: fixed;
+  padding: 20px 0;
+}
+
+.logo {
+  padding: 0 20px 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 20px;
+}
+
+.link {
+  display: block;
+  padding: 12px 20px;
+  color: #ecf0f1;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.link:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.activeLink {
+  display: block;
+  padding: 12px 20px;
+  color: #ecf0f1;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  background-color: #3498db;
+  border-left: 4px solid #2980b9;
+}
+
+/* Para móviles */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+}

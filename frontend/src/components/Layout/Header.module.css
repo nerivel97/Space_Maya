@@ -238,16 +238,25 @@
 .dropdownItem:hover {
   background-color: #f5f5f5;
 }
+/* Icono de admin */
+.adminIcon {
+  margin-right: 6px;
+  vertical-align: middle;
+}
 
-/* Mobile responsive adjustments */
+/* Para móviles: ajustar el menú admin */
 @media (max-width: 768px) {
-  .profileContainer {
-    margin: 10px 0;
+  .navList li {
     width: 100%;
   }
   
-  .profileDropdown {
-    position: static;
-    width: 100%;
+  .adminIcon {
+    display: inline-block;
   }
 }
+
+/* Asegurar que el dropdown no se solape con otros elementos */
+.profileDropdown {
+  z-index: 1000;
+}
+

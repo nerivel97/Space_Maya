@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import { authenticate } from './middlewares/auth.js';
+import markerRoutes from './routes/markerRoutes.js';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/markers', markerRoutes);
 
 // Ruta protegida de ejemplo
 app.get('/api/protected', authenticate, (req, res) => {
