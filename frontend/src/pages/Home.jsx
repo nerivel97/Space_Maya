@@ -126,11 +126,11 @@ const Home = () => {
       <section className={styles.newsletterSection}>
         <div className={styles.container}>
           <div className={styles.newsletterContent}>
-            <h3 className={styles.newsletterTitle}>Suscríbete a nuestro boletín</h3>
+            <h3 className={styles.newsletterTitle}>Mantente actualizado</h3>
             <p className={styles.newsletterText}>Recibe actualizaciones, nuevos recursos y artículos sobre la cultura maya directamente en tu correo.</p>
             <form className={styles.newsletterForm}>
               <input type="email" className={styles.newsletterInput} placeholder="Tu correo electrónico" required />
-              <button type="submit" className={styles.newsletterBtn}>Suscribirse</button>
+              <button type="submit" className={styles.newsletterBtn}>Enviar</button>
             </form>
           </div>
         </div>
