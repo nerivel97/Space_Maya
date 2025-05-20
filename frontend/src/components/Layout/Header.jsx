@@ -17,6 +17,8 @@ const Header = () => {
   const isActive = (path) => {
     if (path === '/herramientas' && location.pathname.startsWith('/herramientas')) {
       return true;
+    } if (path === '/aprende' && location.pathname.startsWith('/aprende')) {
+      return true;
     }
     return location.pathname === path;
   };
@@ -59,8 +61,8 @@ const Header = () => {
             </li>
             <li className={styles.navItem}>
               <Link
-                to="/cursos"
-                className={`${styles.navLink} ${isActive('/cursos') ? styles.active : ''}`}
+                to="/aprende"
+                className={`${styles.navLink} ${isActive('/aprende') ? styles.active : ''}`}
               >
                 Aprende
               </Link>

@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Map from './pages/Mapa';
 import Mitos from './pages/Mitos';
 import Leyendas from './pages/Leyendas';
+import Foro from './pages/Foro';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import './App.css';
@@ -37,6 +38,12 @@ function App() {
             <Route path="/leyendas" element={
               <PrivateRoute>
                 <Leyendas />
+              </PrivateRoute>
+            } />
+
+            <Route path="/aprende/foro" element={
+              <PrivateRoute>
+                <Foro />
               </PrivateRoute>
             } />
 

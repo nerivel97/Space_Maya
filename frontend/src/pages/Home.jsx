@@ -81,7 +81,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Foro</h3>
               <p className={styles.cardText}>Aprende mientras conoces personas como tu, unete a nuestro foro de discusion!</p>
-              <Link to="/juegos" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/aprende/foro" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
           </div>
         </div>
