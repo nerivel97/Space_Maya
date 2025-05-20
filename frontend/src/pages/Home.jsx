@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { FaBookOpen, FaMapMarkedAlt, FaGamepad, FaArrowRight } from 'react-icons/fa';
+import { FaBookQuran, FaBookTanakh } from "react-icons/fa6";
+import { MdOutlineForum } from "react-icons/md";
 import styles from '../styles/Home.module.css';
 
 
@@ -44,6 +46,41 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Juego Educativo</h3>
               <p className={styles.cardText}>Aprende divirtiéndote con nuestro juego interactivo que refuerza tu aprendizaje.</p>
+              <Link to="/juegos" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className={styles.featuresSection}>
+        <div className={styles.container}>
+          <h2 className={styles.sectionTitle}>Aprende con ...</h2>
+          <div className={styles.featuresGrid}>
+            <div className={styles.featureCard}>
+              <div className={styles.cardIcon}>
+                <FaBookTanakh />
+              </div>
+              <h3 className={styles.cardTitle}>Mitos</h3>
+              <p className={styles.cardText}>Amplía tu conocimiento y conoce los mitos mas conocidos de la region.</p>
+              <Link to="/vocabulario" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+            </div>
+            
+            <div className={styles.featureCard}>
+              <div className={styles.cardIcon}>
+                <FaBookQuran />
+              </div>
+              <h3 className={styles.cardTitle}>Leyendas</h3>
+              <p className={styles.cardText}>Descubre las leyendas mas conocidas de la region maya.</p>
+              <Link to="/herramientas/mapa" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+            </div>
+            
+            <div className={styles.featureCard}>
+              <div className={styles.cardIcon}>
+                <MdOutlineForum />
+              </div>
+              <h3 className={styles.cardTitle}>Foro</h3>
+              <p className={styles.cardText}>Aprende mientras conoces personas como tu, unete a nuestro foro de discusion!</p>
               <Link to="/juegos" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
           </div>

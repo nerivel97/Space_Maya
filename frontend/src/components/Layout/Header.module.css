@@ -32,6 +32,12 @@
   color: #007f7a;
 }
 
+.logo {
+  height: 60px;     /* ajusta al tamaño que prefieras */
+  width: auto;
+  vertical-align: middle;
+}
+
 .mobileMenuToggle {
   display: none;
   background: none;

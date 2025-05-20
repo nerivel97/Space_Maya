@@ -30,53 +30,60 @@ const Header = () => {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <Link to="/" className={styles.brandName}>Space Maya</Link>
-        
-        <button 
-          className={styles.mobileMenuToggle} 
+        <Link to="/"> <img
+            src="/img/logov2.png" // cambia esto por la ruta real de tu logo
+            alt="Logo"
+            className={styles.logo} // agrégalo al CSS para dar tamaño y estilo
+          /> </Link>
+        <Link to="/" className={styles.brandName}>
+          COOXDANICMAYA
+        </Link>
+
+        <button
+          className={styles.mobileMenuToggle}
           onClick={toggleMenu}
           aria-label="Toggle menu"
         >
           <FaBars />
         </button>
-        
+
         <nav className={`${styles.mainNav} ${isMenuOpen ? styles.active : ''}`}>
           <ul className={styles.navList}>
             <li className={styles.navItem}>
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 className={`${styles.navLink} ${isActive('/') ? styles.active : ''}`}
               >
                 Inicio
               </Link>
             </li>
             <li className={styles.navItem}>
-              <Link 
-                to="/cursos" 
+              <Link
+                to="/cursos"
                 className={`${styles.navLink} ${isActive('/cursos') ? styles.active : ''}`}
               >
                 Aprende
               </Link>
             </li>
             <li className={styles.navItem}>
-              <Link 
-                to="/herramientas" 
+              <Link
+                to="/herramientas"
                 className={`${styles.navLink} ${isActive('/herramientas') ? styles.active : ''}`}
               >
                 Herramientas
               </Link>
             </li>
             <li className={styles.navItem}>
-              <Link 
-                to="/sobre-nosotros" 
+              <Link
+                to="/sobre-nosotros"
                 className={`${styles.navLink} ${isActive('/sobre-nosotros') ? styles.active : ''}`}
               >
                 Sobre Nosotros
               </Link>
             </li>
             <li className={styles.navItem}>
-              <Link 
-                to="/contacto" 
+              <Link
+                to="/contacto"
                 className={`${styles.navLink} ${isActive('/contacto') ? styles.active : ''}`}
               >
                 Contacto
@@ -86,8 +93,8 @@ const Header = () => {
             {/* Enlace de Admin - Solución 1: Usar null en lugar de false */}
             {isAdmin ? (
               <li className={styles.navItem}>
-                <Link 
-                  to="/admin" 
+                <Link
+                  to="/admin"
                   className={`${styles.navLink} ${isActive('/admin') ? styles.active : ''}`}
                 >
                   <FaCog className={styles.adminIcon} /> Admin
@@ -99,7 +106,7 @@ const Header = () => {
           {/* Mostrar profileContainer solo si es usuario normal (no admin) */}
           {currentUser && !isAdmin ? (
             <div className={styles.profileContainer}>
-              <button 
+              <button
                 className={styles.profileButton}
                 onClick={toggleProfile}
                 aria-label="Perfil de usuario"
@@ -109,17 +116,17 @@ const Header = () => {
                   Mi cuenta <FaChevronDown className={`${styles.dropdownIcon} ${isProfileOpen ? styles.rotate : ''}`} />
                 </span>
               </button>
-              
+
               {isProfileOpen && (
                 <div className={styles.profileDropdown}>
-                  <Link 
-                    to="/perfil" 
+                  <Link
+                    to="/perfil"
                     className={styles.dropdownItem}
                     onClick={() => setIsProfileOpen(false)}
                   >
                     Perfil
                   </Link>
-                  <button 
+                  <button
                     className={styles.dropdownItem}
                     onClick={handleLogout}
                   >
@@ -141,7 +148,7 @@ const Header = () => {
           {/* Opción de logout minimalista para admin - Solución 2: Convertir a fragmento */}
           {isAdmin ? (
             <>
-              <button 
+              <button
                 className={styles.adminLogoutButton}
                 onClick={handleLogout}
               >
