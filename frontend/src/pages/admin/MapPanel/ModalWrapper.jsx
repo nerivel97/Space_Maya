@@ -1,4 +1,3 @@
-// components/ModalWrapper.jsx
 import { useEffect } from 'react';
 import Modal from 'react-modal';
 import styles from '../../../styles/admin/MapPanel.module.css';
@@ -7,10 +6,10 @@ const ModalWrapper = ({
   isOpen, 
   onRequestClose, 
   children,
-  contentLabel 
+  contentLabel,
+  shouldCloseOnOverlayClick = true
 }) => {
   useEffect(() => {
-    // Configuración segura del modal
     const initializeModal = () => {
       try {
         const appElement = document.getElementById('__next') || document.body;
@@ -21,6 +20,9 @@ const ModalWrapper = ({
     };
 
     initializeModal();
+    return () => {
+      Modal.setAppElement(null);
+    };
   }, []);
 
   return (
@@ -30,7 +32,8 @@ const ModalWrapper = ({
       className={styles.modal}
       overlayClassName={styles.overlay}
       contentLabel={contentLabel}
-      ariaHideApp={false} // Desactivado temporalmente para evitar warnings
+      ariaHideApp={false}
+      shouldCloseOnOverlayClick={shouldCloseOnOverlayClick}
     >
       {children}
     </Modal>

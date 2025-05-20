@@ -2,8 +2,8 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "src/app.js", 
-  "type": "module",      
+  "main": "src/app.js",
+  "type": "module",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js"
@@ -17,7 +17,9 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.14.1"
+    "multer": "^2.0.0",
+    "mysql2": "^3.14.1",
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

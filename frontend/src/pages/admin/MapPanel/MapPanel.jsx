@@ -3,8 +3,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import styles from '../../../styles/admin/MapPanel.module.css';
-import api from '../../../api/api'; // Importa la API mejorada
+import api from '../../../api/api';
 import ModalWrapper from '../../../pages/admin/MapPanel/ModalWrapper';
+import { FaUpload, FaTimes } from 'react-icons/fa';
 
 // Configuración de iconos para Leaflet
 const setupLeafletIcons = () => {
@@ -40,12 +41,13 @@ const MapPanel = () => {
     description: '',
     location: '',
     features: '',
-    images: ''
+    images: [],
+    imageFiles: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cargar marcadores existentes con manejo mejorado de errores
+  // Cargar marcadores existentes
   useEffect(() => {
     const fetchMarkers = async () => {
       setLoading(true);
@@ -56,19 +58,18 @@ const MapPanel = () => {
       } catch (err) {
         console.error('Error loading markers:', err);
         setError(err.message || 'Error al cargar marcadores');
-        // Mostrar notificación al usuario si es necesario
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchMarkers();
   }, []);
 
   // Función para agregar marcadores al mapa
   const addMarkerToMap = useCallback((marker, index) => {
     if (!mapInstance.current) return;
-    
+
     const newMarker = L.marker(marker.position, {
       icon: L.divIcon({
         className: styles.customMarker,
@@ -97,7 +98,7 @@ const MapPanel = () => {
     return newMarker;
   }, [markers]);
 
-  // Inicializar mapa (igual que antes)
+  // Inicializar mapa
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -142,7 +143,7 @@ const MapPanel = () => {
           if (mapInstance.current) {
             mapInstance.current.off('click', handleMapClick);
           }
-          window.removeEventListener('editMarker', () => {});
+          window.removeEventListener('editMarker', () => { });
         };
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -183,7 +184,51 @@ const MapPanel = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Crear nuevo marcador (con manejo mejorado de errores)
+  // Manejar subida de imágenes
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setLoading(true);
+    try {
+      const uploadPromises = files.map(file => {
+        if (!file.type.startsWith('image/')) {
+          throw new Error('Solo se permiten archivos de imagen');
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('Las imágenes no pueden ser mayores a 5MB');
+        }
+        return api.uploadImage(file);
+      });
+
+      const results = await Promise.all(uploadPromises);
+      const newImageUrls = results.map(res => res.imageUrl);
+
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...newImageUrls],
+        imageFiles: [...prev.imageFiles, ...files]
+      }));
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      setError(error.message || 'Error al subir imágenes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Eliminar imagen
+  const handleRemoveImage = (index) => {
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      const newImageFiles = [...prev.imageFiles];
+      newImages.splice(index, 1);
+      newImageFiles.splice(index, 1);
+      return { ...prev, images: newImages, imageFiles: newImageFiles };
+    });
+  };
+
+  // Crear nuevo marcador
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPosition) return;
@@ -196,7 +241,7 @@ const MapPanel = () => {
         description: formData.description,
         location: formData.location,
         features: formData.features.split('\n').filter(f => f.trim()),
-        images: formData.images.split('\n').filter(url => url.trim())
+        images: formData.images
       };
 
       const createdMarker = await api.post('/markers', newMarker);
@@ -205,7 +250,6 @@ const MapPanel = () => {
     } catch (err) {
       console.error('Error creating marker:', err);
       setError(err.message || 'Error al crear marcador');
-      // Aquí podrías mostrar una notificación al usuario
     } finally {
       setLoading(false);
     }
@@ -224,7 +268,7 @@ const MapPanel = () => {
         description: formData.description,
         location: formData.location,
         features: formData.features.split('\n').filter(f => f.trim()),
-        images: formData.images.split('\n').filter(url => url.trim())
+        images: formData.images
       };
 
       const updated = await api.put(`/markers/${currentMarkerId}`, updatedMarker);
@@ -241,7 +285,7 @@ const MapPanel = () => {
   // Eliminar marcador
   const handleDeleteMarker = async () => {
     if (!selectedMarker && !currentMarkerId) return;
-    
+
     const markerId = selectedMarker?.id || currentMarkerId;
     setLoading(true);
     try {
@@ -262,8 +306,9 @@ const MapPanel = () => {
       title: marker.title,
       description: marker.description,
       location: marker.location,
-      features: marker.features.join('\n'),
-      images: marker.images.join('\n')
+      features: marker.features?.join('\n') || '',
+      images: marker.images || [],
+      imageFiles: []
     });
     setSelectedPosition(marker.position);
     setCurrentMarkerId(marker.id);
@@ -279,7 +324,8 @@ const MapPanel = () => {
       description: '',
       location: '',
       features: '',
-      images: ''
+      images: [],
+      imageFiles: []
     });
     setSelectedPosition(null);
     setIsModalOpen(false);
@@ -296,14 +342,13 @@ const MapPanel = () => {
   return (
     <AdminLayout>
       <div className={styles.mapPanelContainer}>
-        {/* Mostrar estado de carga o error */}
         {loading && (
           <div className={styles.loadingOverlay}>
             <div className={styles.loadingSpinner}></div>
             <p>{isEditMode ? 'Actualizando marcador...' : 'Cargando...'}</p>
           </div>
         )}
-        
+
         {error && (
           <div className={styles.errorAlert}>
             {error}
@@ -322,7 +367,7 @@ const MapPanel = () => {
             {selectedMarker ? (
               <div className={styles.markerDetails}>
                 <h2>Detalles del Marcador</h2>
-                
+
                 <div className={styles.detailSection}>
                   <h3>{selectedMarker.title}</h3>
                   <p><strong>Coordenadas:</strong> Lat: {selectedMarker.position[0].toFixed(4)}, Lng: {selectedMarker.position[1].toFixed(4)}</p>
@@ -340,26 +385,26 @@ const MapPanel = () => {
                     </div>
                   )}
 
-                  {selectedMarker.images?.length > 0 && (
-                    <div className={styles.imagesGallery}>
-                      <h4>Imágenes:</h4>
-                      <div className={styles.imagesContainer}>
-                        {selectedMarker.images.map((imageUrl, index) => (
-                          <div key={index} className={styles.imageWrapper}>
-                            <img
-                              src={imageUrl}
-                              alt={`Imagen ${index + 1} de ${selectedMarker.title}`}
-                              className={styles.markerImage}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/images/placeholder-image.jpg'
-                              }}
-                            />
-                          </div>
-                        ))}
+               
+                  {selectedMarker.images?.map((imagePath, index) => {
+                    const imageUrl = imagePath.startsWith('http') ? imagePath :
+                      `http://localhost:5000${imagePath}?t=${selectedMarker.updatedAt || Date.now()}`;
+
+                    return (
+                      <div key={index} className={styles.imageWrapper}>
+                        <img
+                          src={imageUrl}
+                          alt={`Imagen ${index + 1}`}
+                          className={styles.markerImage}
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/images/placeholder-image.jpg';
+                          }}
+                        />
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
 
                 <div className={styles.markerActions}>
@@ -421,6 +466,7 @@ const MapPanel = () => {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel={isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}
+        shouldCloseOnOverlayClick={!loading}
       >
         <div className={styles.modalContent}>
           <h2>{isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}</h2>
@@ -486,15 +532,41 @@ const MapPanel = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>URLs de imágenes (una por línea):</label>
-              <textarea
-                name="images"
-                value={formData.images}
-                onChange={handleInputChange}
-                required
-                placeholder="https://ejemplo.com/imagen1.jpg\nhttps://ejemplo.com/imagen2.jpg"
-                disabled={loading}
-              />
+              <label>Imágenes:</label>
+              <div className={styles.imageUploadContainer}>
+                <label className={styles.uploadButton}>
+                  <FaUpload /> Subir imágenes
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                    disabled={loading}
+                  />
+                </label>
+                <p className={styles.uploadHint}>Formatos aceptados: JPG, PNG, GIF. Máx. 5MB por imagen.</p>
+
+                <div className={styles.imagePreviews}>
+                  {formData.images.map((imageUrl, index) => (
+                    <div key={index} className={styles.imagePreviewItem}>
+                      <img
+                        src={imageUrl}
+                        alt={`Previsualización ${index + 1}`}
+                        className={styles.imagePreview}
+                      />
+                      <button
+                        type="button"
+                        className={styles.removeImageButton}
+                        onClick={() => handleRemoveImage(index)}
+                        disabled={loading}
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className={styles.formActions}>

@@ -47,3 +47,19 @@ export const deleteMarker = async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar marcador' });
   }
 };
+
+export const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se ha subido ninguna imagen' });
+    }
+
+    // Aquí puedes procesar la imagen si es necesario (redimensionar, etc.)
+    const imageUrl = `/uploads/${req.file.filename}`;
+    
+    res.status(201).json({ imageUrl });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Error al subir imagen' });
+  }
+};
