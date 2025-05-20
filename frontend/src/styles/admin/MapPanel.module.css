@@ -1,3 +1,4 @@
+/* Estilos base y contenedores */
 .mapPanelContainer {
   padding: 20px;
   height: 100%;
@@ -29,6 +30,7 @@
   overflow-y: auto;
 }
 
+/* Estilos para el formulario */
 .markerForm {
   display: flex;
   flex-direction: column;
@@ -59,6 +61,7 @@
   resize: vertical;
 }
 
+/* Botones y acciones */
 .formActions {
   display: flex;
   gap: 10px;
@@ -73,6 +76,9 @@
   padding: 10px 15px;
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .saveButton:hover {
@@ -100,6 +106,9 @@
   border-radius: 4px;
   cursor: pointer;
   margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .deleteButton:hover {
@@ -113,6 +122,9 @@
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .editButton:hover {
@@ -126,137 +138,421 @@
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .backButton:hover {
   background-color: #7f8c8d;
 }
 
+/* Lista de marcadores */
 .markersList {
   margin-top: 20px;
 }
 
-.markersList ul {
+.markersCount {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.markersContainer {
   list-style: none;
   padding: 0;
   margin-top: 10px;
 }
 
 .markerListItem {
-  padding: 8px 0;
+  padding: 12px 0;
   border-bottom: 1px solid #eee;
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
 }
 
 .markerListItem:hover {
-  background-color: #f5f5f5;
+  background-color: #f9f9f9;
 }
 
+.markerListItemContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.markerTitle {
+  font-weight: 500;
+}
+
+.markerLocation {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.markerThumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.markerThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.noMarkers {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+/* Detalles del marcador */
 .markerDetails {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+}
+
+.markerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .detailSection {
   margin-bottom: 15px;
 }
 
-.featuresList ul {
+.detailRow {
+  margin-bottom: 10px;
+}
+
+.detailLabel {
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.detailValue {
+  color: #555;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Características */
+.featuresList {
   padding-left: 20px;
   margin-top: 5px;
 }
 
-.imagesContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
+.featureItem {
+  margin-bottom: 5px;
+  color: #555;
 }
 
-.imageWrapper {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.markerImage {
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-}
-
-.markerActions {
-  display: flex;
-  gap: 10px;
+/* Galería de imágenes */
+.gallerySection {
   margin-top: 20px;
 }
 
-.positionInfo {
-  color: #666;
-  font-style: italic;
-  margin-bottom: 15px;
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
 }
 
-.popupActions button {
-  background-color: #f39c12;
-  color: white;
-  border: none;
-  padding: 2px 6px;
-  border-radius: 3px;
+.imageCard {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
-  margin-top: 5px;
 }
 
-.popupActions button:hover {
-  background-color: #e67e22;
+.imageCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.customMarker {
-  background: #e74c3c;
-  color: white;
-  border-radius: 50%;
-  text-align: center;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+.imageContainer {
+  position: relative;
+  padding-top: 100%; /* Aspect ratio 1:1 */
+  overflow: hidden;
 }
 
-.markerContent {
+.galleryImage {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.modal {
+.imageCard:hover .imageOverlay {
+  opacity: 1;
+}
+
+.zoomIcon {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.imageInfo {
+  padding: 8px;
+  background: #f5f5f5;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+/* Previsualización de imágenes en modal */
+.imageUploadContainer {
+  margin-top: 10px;
+  border: 1px dashed #ccc;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: #f0f0f0;
+  color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 10px;
+}
+
+.uploadButton:hover {
+  background-color: #e0e0e0;
+}
+
+.uploadHint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.modalImagePreviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.modalImagePreviewItem {
+  position: relative;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.modalImagePreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.modalImagePreview:hover {
+  transform: scale(1.05);
+}
+
+.removeImageButton {
   position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+}
+
+.removeImageButton:hover {
+  background: #cc0000;
+}
+
+/* Modal de imagen ampliada */
+.imageModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.imageModalContent {
+  max-width: 90%;
+  max-height: 90%;
+  position: relative;
+}
+
+.imageModalImg {
+  max-width: 100%;
+  max-height: 80vh;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.closeImageModal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* Efecto de carga para imágenes */
+@keyframes shimmer {
+  0% { background-position: -468px 0 }
+  100% { background-position: 468px 0 }
+}
+
+.imageLoading {
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
+  background-size: 800px 104px;
+}
+
+/* Estilos para el modal */
+/* Estilos específicos para el modal */
+.modal {
+  position: fixed;
   top: 50%;
   left: 50%;
-  right: auto;
-  bottom: auto;
   transform: translate(-50%, -50%);
   background: white;
-  padding: 2rem;
+  padding: 20px;
   border-radius: 8px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
+  max-width: 90%;
+  width: 600px;
+  max-height: 90vh;
   overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   outline: none;
 }
 
-.overlay {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ajustes para el contenido del modal */
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+/* Ajustes para el formulario dentro del modal */
+.markerForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Asegurar que el mapa tenga un z-index menor */
+.mapContainer {
+  z-index: 1;
+  position: relative;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .panelLayout {
+    flex-direction: column;
+  }
+  
+  .mapContainer {
+    height: 60vh;
+  }
+  
+  .controlsPanel {
+    height: auto;
+    max-height: 40vh;
+  }
+}
+.positionInfo {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 15px;
 }
 
 /* Loading overlay */
@@ -328,112 +624,50 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.imageUploadContainer {
-  margin-top: 10px;
-  border: 1px dashed #ccc;
-  padding: 15px;
-  border-radius: 4px;
-}
-
-.uploadButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 15px;
-  background-color: #f0f0f0;
-  color: #333;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 10px;
-}
-
-.uploadButton:hover {
-  background-color: #e0e0e0;
-}
-
-.uploadHint {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-.imagePreviews {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.imagePreviewItem {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.imagePreview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.removeImageButton {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #ff4444;
+/* Estilos para los marcadores en el mapa */
+.customMarker {
+  background: #e74c3c;
   color: white;
-  border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  text-align: center;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  font-size: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.removeImageButton:hover {
-  background: #cc0000;
-}
-
-/* Estilos para la galería de imágenes en los detalles del marcador */
-.imagesGallery {
-  margin-top: 15px;
-}
-
-.imagesContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.imageWrapper {
-  position: relative;
-  padding-top: 100%; /* Aspect ratio 1:1 */
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.markerImage {
-  position: absolute;
-  top: 0;
-  left: 0;
+.markerContent {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.markerImage:hover {
-  transform: scale(1.05);
+.markerActions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  align-content: center;
+  text-align: center;
 }
 
+.popupActions button {
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.popupActions button:hover {
+  background-color: #e67e22;
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
   .panelLayout {
     flex-direction: column;
@@ -442,5 +676,28 @@ button:disabled {
   
   .mapContainer {
     height: 500px;
+  }
+
+  .imageGrid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .formActions {
+    flex-direction: column;
+  }
+  
+  .deleteButton {
+    margin-right: 0;
+    order: 1;
+  }
+  
+  .cancelButton {
+    order: 2;
+  }
+  
+  .saveButton {
+    order: 3;
   }
 }

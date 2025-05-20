@@ -5,7 +5,7 @@ import AdminLayout from '../../../components/admin/AdminLayout';
 import styles from '../../../styles/admin/MapPanel.module.css';
 import api from '../../../api/api';
 import ModalWrapper from '../../../pages/admin/MapPanel/ModalWrapper';
-import { FaUpload, FaTimes } from 'react-icons/fa';
+import { FaUpload, FaTimes, FaSearchPlus, FaTrash, FaEdit, FaArrowLeft } from 'react-icons/fa';
 
 // Configuración de iconos para Leaflet
 const setupLeafletIcons = () => {
@@ -46,6 +46,8 @@ const MapPanel = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [loadingImages, setLoadingImages] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Cargar marcadores existentes
   useEffect(() => {
@@ -83,7 +85,7 @@ const MapPanel = () => {
       <small>${marker.location}</small>
       <div class="${styles.popupActions}">
         <button onclick="event.stopPropagation(); window.dispatchEvent(new CustomEvent('editMarker', { detail: ${marker.id} }));">
-          Editar
+          <i class="fas fa-edit"></i> Editar
         </button>
       </div>
     `);
@@ -143,7 +145,7 @@ const MapPanel = () => {
           if (mapInstance.current) {
             mapInstance.current.off('click', handleMapClick);
           }
-          window.removeEventListener('editMarker', () => { });
+          window.removeEventListener('editMarker', () => {});
         };
       } catch (error) {
         console.error('Error initializing map:', error);
@@ -332,11 +334,24 @@ const MapPanel = () => {
     setIsEditMode(false);
     setCurrentMarkerId(null);
     setError(null);
+    setSelectedImage(null);
   };
 
   // Cerrar modal
   const closeModal = () => {
     resetForm();
+  };
+
+  // Manejar carga de imagen
+  const handleImageLoad = (index) => {
+    setLoadingImages(prev => ({ ...prev, [index]: false }));
+  };
+
+  // Construir URL de imagen
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `http://localhost:5000${imagePath}`;
   };
 
   return (
@@ -356,55 +371,113 @@ const MapPanel = () => {
           </div>
         )}
 
+        {/* Modal para imagen ampliada */}
+        {selectedImage && (
+          <div className={styles.imageModalOverlay} onClick={() => setSelectedImage(null)}>
+            <div className={styles.imageModalContent} onClick={e => e.stopPropagation()}>
+              <img 
+                src={selectedImage.url} 
+                alt={selectedImage.alt} 
+                className={styles.imageModalImg}
+              />
+              <button 
+                className={styles.closeImageModal}
+                onClick={() => setSelectedImage(null)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className={styles.panelLayout}>
           <div
             ref={mapRef}
             className={styles.mapContainer}
-            style={{ height: '100%' }}
           />
 
           <div className={styles.controlsPanel}>
             {selectedMarker ? (
               <div className={styles.markerDetails}>
-                <h2>Detalles del Marcador</h2>
+                <div className={styles.markerHeader}>
+                  <h2>{selectedMarker.title}</h2>
+                  <button
+                    className={styles.backButton}
+                    onClick={() => setSelectedMarker(null)}
+                  >
+                    <FaArrowLeft /> Volver
+                  </button>
+                </div>
 
                 <div className={styles.detailSection}>
-                  <h3>{selectedMarker.title}</h3>
-                  <p><strong>Coordenadas:</strong> Lat: {selectedMarker.position[0].toFixed(4)}, Lng: {selectedMarker.position[1].toFixed(4)}</p>
-                  <p><strong>Ubicación:</strong> {selectedMarker.location}</p>
-                  <p><strong>Descripción:</strong> {selectedMarker.description}</p>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Ubicación:</span>
+                    <span className={styles.detailValue}>{selectedMarker.location}</span>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Coordenadas:</span>
+                    <span className={styles.detailValue}>
+                      Lat: {selectedMarker.position[0].toFixed(4)}, Lng: {selectedMarker.position[1].toFixed(4)}
+                    </span>
+                  </div>
+                  <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Descripción:</span>
+                    <p className={styles.detailValue}>{selectedMarker.description}</p>
+                  </div>
 
                   {selectedMarker.features?.length > 0 && (
-                    <div className={styles.featuresList}>
-                      <h4>Características:</h4>
-                      <ul>
+                    <div className={styles.featuresSection}>
+                      <h3 className={styles.sectionTitle}>Características</h3>
+                      <ul className={styles.featuresList}>
                         {selectedMarker.features.map((feature, index) => (
-                          <li key={index}>{feature}</li>
+                          <li key={index} className={styles.featureItem}>
+                            {feature}
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-               
-                  {selectedMarker.images?.map((imagePath, index) => {
-                    const imageUrl = imagePath.startsWith('http') ? imagePath :
-                      `http://localhost:5000${imagePath}?t=${selectedMarker.updatedAt || Date.now()}`;
-
-                    return (
-                      <div key={index} className={styles.imageWrapper}>
-                        <img
-                          src={imageUrl}
-                          alt={`Imagen ${index + 1}`}
-                          className={styles.markerImage}
-                          crossOrigin="anonymous"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '/images/placeholder-image.jpg';
-                          }}
-                        />
+                  {selectedMarker.images?.length > 0 && (
+                    <div className={styles.gallerySection}>
+                      <h3 className={styles.sectionTitle}>Galería de Imágenes</h3>
+                      <div className={styles.imageGrid}>
+                        {selectedMarker.images.map((imagePath, index) => {
+                          const imageUrl = getImageUrl(imagePath);
+                          return (
+                            <div 
+                              key={index} 
+                              className={styles.imageCard}
+                              onClick={() => setSelectedImage({
+                                url: `${imageUrl}?t=${selectedMarker.updatedAt || Date.now()}`,
+                                alt: `Imagen ${index + 1} de ${selectedMarker.title}`
+                              })}
+                            >
+                              <div className={styles.imageContainer}>
+                                <img
+                                  src={`${imageUrl}?t=${selectedMarker.updatedAt || Date.now()}`}
+                                  alt={`Imagen ${index + 1}`}
+                                  className={`${styles.galleryImage} ${loadingImages[index] ? styles.imageLoading : ''}`}
+                                  crossOrigin="anonymous"
+                                  onLoad={() => handleImageLoad(index)}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/images/placeholder-image.jpg';
+                                  }}
+                                />
+                                <div className={styles.imageOverlay}>
+                                  <FaSearchPlus className={styles.zoomIcon} />
+                                </div>
+                              </div>
+                              <div className={styles.imageInfo}>
+                                <span>Imagen {index + 1}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.markerActions}>
@@ -413,7 +486,7 @@ const MapPanel = () => {
                     onClick={() => handleEditMarker(selectedMarker)}
                     disabled={loading}
                   >
-                    Editar
+                    <FaEdit /> Editar
                   </button>
                   <button
                     className={styles.deleteButton}
@@ -424,14 +497,7 @@ const MapPanel = () => {
                     }}
                     disabled={loading}
                   >
-                    Eliminar
-                  </button>
-                  <button
-                    className={styles.backButton}
-                    onClick={() => setSelectedMarker(null)}
-                    disabled={loading}
-                  >
-                    ← Volver a la lista
+                    <FaTrash /> Eliminar
                   </button>
                 </div>
               </div>
@@ -440,21 +506,35 @@ const MapPanel = () => {
                 <h2>Marcadores existentes</h2>
                 {markers.length > 0 ? (
                   <div className={styles.markersList}>
-                    <p>Total: {markers.length}</p>
-                    <ul>
+                    <p className={styles.markersCount}>Total: {markers.length}</p>
+                    <ul className={styles.markersContainer}>
                       {markers.map((marker, index) => (
                         <li
                           key={index}
                           onClick={() => !loading && setSelectedMarker(marker)}
                           className={styles.markerListItem}
                         >
-                          <strong>{marker.title}</strong> - {marker.location}
+                          <div className={styles.markerListItemContent}>
+                            <span className={styles.markerTitle}>{marker.title}</span>
+                            <span className={styles.markerLocation}>{marker.location}</span>
+                          </div>
+                          {marker.images?.length > 0 && (
+                            <div className={styles.markerThumbnail}>
+                              <img 
+                                src={getImageUrl(marker.images[0])} 
+                                alt={`Miniatura de ${marker.title}`}
+                              />
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>
                   </div>
                 ) : (
-                  <p>No hay marcadores creados aún. Haz clic en el mapa para agregar uno nuevo.</p>
+                  <div className={styles.noMarkers}>
+                    <p>No hay marcadores creados aún.</p>
+                    <p>Haz clic en el mapa para agregar uno nuevo.</p>
+                  </div>
                 )}
               </>
             )}
@@ -469,7 +549,9 @@ const MapPanel = () => {
         shouldCloseOnOverlayClick={!loading}
       >
         <div className={styles.modalContent}>
-          <h2>{isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}</h2>
+          <h2 className={styles.modalTitle}>
+            {isEditMode ? "Editar marcador" : "Agregar nuevo marcador"}
+          </h2>
           <p className={styles.positionInfo}>
             Posición seleccionada: {selectedPosition && `Lat: ${selectedPosition[0].toFixed(2)}, Lng: ${selectedPosition[1].toFixed(2)}`}
           </p>
@@ -482,42 +564,48 @@ const MapPanel = () => {
           )}
 
           <form onSubmit={isEditMode ? handleUpdateMarker : handleSubmit} className={styles.markerForm}>
-            <div className={styles.formGroup}>
-              <label>Título:</label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-                placeholder="Ej: Templo Principal"
-                disabled={loading}
-              />
-            </div>
+            <div className={styles.formColumns}>
+              <div className={styles.formColumn}>
+                <div className={styles.formGroup}>
+                  <label>Título:</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Ej: Templo Principal"
+                    disabled={loading}
+                  />
+                </div>
 
-            <div className={styles.formGroup}>
-              <label>Ubicación:</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                required
-                placeholder="Ej: Zona Arqueológica Norte"
-                disabled={loading}
-              />
-            </div>
+                <div className={styles.formGroup}>
+                  <label>Ubicación:</label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Ej: Zona Arqueológica Norte"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
 
-            <div className={styles.formGroup}>
-              <label>Descripción:</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                placeholder="Descripción detallada del lugar..."
-                disabled={loading}
-              />
+              <div className={styles.formColumn}>
+                <div className={styles.formGroup}>
+                  <label>Descripción:</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Descripción detallada del lugar..."
+                    disabled={loading}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className={styles.formGroup}>
@@ -547,24 +635,32 @@ const MapPanel = () => {
                 </label>
                 <p className={styles.uploadHint}>Formatos aceptados: JPG, PNG, GIF. Máx. 5MB por imagen.</p>
 
-                <div className={styles.imagePreviews}>
-                  {formData.images.map((imageUrl, index) => (
-                    <div key={index} className={styles.imagePreviewItem}>
-                      <img
-                        src={imageUrl}
-                        alt={`Previsualización ${index + 1}`}
-                        className={styles.imagePreview}
-                      />
-                      <button
-                        type="button"
-                        className={styles.removeImageButton}
-                        onClick={() => handleRemoveImage(index)}
-                        disabled={loading}
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
-                  ))}
+                <div className={styles.modalImagePreviews}>
+                  {formData.images.map((imageUrl, index) => {
+                    const fullImageUrl = getImageUrl(imageUrl);
+                    return (
+                      <div key={index} className={styles.modalImagePreviewItem}>
+                        <img
+                          src={`${fullImageUrl}?t=${Date.now()}`}
+                          alt={`Previsualización ${index + 1}`}
+                          className={styles.modalImagePreview}
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/images/placeholder-image.jpg';
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.removeImageButton}
+                          onClick={() => handleRemoveImage(index)}
+                          disabled={loading}
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -581,7 +677,7 @@ const MapPanel = () => {
                   }}
                   disabled={loading}
                 >
-                  Eliminar
+                  <FaTrash /> Eliminar
                 </button>
               )}
               <button
@@ -599,7 +695,13 @@ const MapPanel = () => {
               >
                 {loading ? (
                   <span className={styles.buttonSpinner}></span>
-                ) : isEditMode ? "Actualizar" : "Guardar"}
+                ) : isEditMode ? (
+                  <>
+                    <FaEdit /> Actualizar
+                  </>
+                ) : (
+                  "Guardar"
+                )}
               </button>
             </div>
           </form>
