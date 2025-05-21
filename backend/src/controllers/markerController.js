@@ -54,7 +54,7 @@ export const uploadImage = async (req, res) => {
       return res.status(400).json({ message: 'No se ha subido ninguna imagen' });
     }
 
-    // Aquí puedes procesar la imagen si es necesario (redimensionar, etc.)
+    // Aquí se procesa la ruta de la imagen para mostrarla en el frontend
     const imageUrl = `/uploads/${req.file.filename}`;
     
     res.status(201).json({ imageUrl });

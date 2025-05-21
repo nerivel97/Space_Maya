@@ -30,7 +30,7 @@ export const register = async (req, res) => {
     const userId = await User.create({
       email,
       password: hashedPassword,
-      isAdmin: false // Todos los nuevos registros son usuarios normales
+      isAdmin: false // Todos los demas registros de usuarios seran normales los que no tengan esto
     });
 
     const token = generateToken(userId, false);
