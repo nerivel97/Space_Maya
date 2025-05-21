@@ -15,7 +15,7 @@ const generateToken = (userId, isAdmin) => {
 
 export const register = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, profile } = req.body;
     
     if (!email || !password) {
       return res.status(400).json({ message: 'Email y contraseña son requeridos' });
@@ -30,13 +30,49 @@ export const register = async (req, res) => {
     const userId = await User.create({
       email,
       password: hashedPassword,
-      isAdmin: false // Todos los demas registros de usuarios seran normales los que no tengan esto
+      isAdmin: false,
+      profile: profile || {}
     });
 
     const token = generateToken(userId, false);
     res.status(201).json({ userId, token });
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar usuario' });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const profileData = req.body;
+    
+    await User.updateProfile(userId, profileData);
+    res.json({ message: 'Perfil actualizado correctamente' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar perfil' });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      name: user.name,
+      lastname: user.lastname,
+      age: user.age,
+      avatar: user.avatar,
+      university: user.university,
+      interests: user.interests,
+      bio: user.bio
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener perfil' });
   }
 };
 

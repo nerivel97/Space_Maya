@@ -9,6 +9,7 @@ import Map from './pages/Mapa';
 import Mitos from './pages/Mitos';
 import Leyendas from './pages/Leyendas';
 import Foro from './pages/Foro';
+import Perfil from './pages/Perfil';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import './App.css';
@@ -22,6 +23,12 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+
+            <Route path="/perfil" element={
+              <PrivateRoute>
+                <Perfil />
+              </PrivateRoute>
+            } />
             
             <Route path="/herramientas/mapa" element={
               <PrivateRoute>

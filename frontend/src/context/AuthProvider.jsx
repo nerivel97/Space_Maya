@@ -78,29 +78,43 @@ const AuthProvider = ({ children }) => {
   }
 };
 
-  const register = async (email, password) => {
-    try {
-      const { token } = await api.post('/auth/register', { email, password });
-      
-      if (!token) {
-        throw new Error('No se recibió token de autenticación');
-      }
+  const register = async (email, password, profile = {}) => {
+  try {
+    const authApi = axios.create({
+      baseURL: 'http://localhost:5000/api',
+      timeout: 10000
+    });
 
-      localStorage.setItem('token', token);
-      const decoded = jwtDecode(token);
-      
-      setCurrentUser({ 
-        id: decoded.userId,
-        email: decoded.email
-      });
-      setIsAdmin(decoded.isAdmin || false);
-      
-      return true;
-    } catch (error) {
-      console.error('Register error:', error);
-      throw new Error(error.message || 'Error en el registro');
+    const response = await authApi.post('/auth/register', { 
+      email, 
+      password,
+      profile 
+    });
+    
+    if (!response.data.token) {
+      throw new Error('No se recibió token de autenticación');
     }
-  };
+
+    localStorage.setItem('token', response.data.token);
+    const decoded = jwtDecode(response.data.token);
+    
+    setCurrentUser({ 
+      id: decoded.userId,
+      email: decoded.email,
+      profile: {
+        name: profile.name,
+        lastname: profile.lastname,
+        avatar: profile.avatar
+      }
+    });
+    setIsAdmin(decoded.isAdmin || false);
+    
+    return true;
+  } catch (error) {
+    console.error('Register error:', error);
+    throw new Error(error.response?.data?.message || error.message || 'Error en el registro');
+  }
+};
 
   const logout = () => {
     localStorage.removeItem('token');

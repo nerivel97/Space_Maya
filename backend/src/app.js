@@ -46,6 +46,7 @@ app.use('/uploads', (req, res, next) => {
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
+app.use('/api/profile', authRoutes);
 
 // Ruta protegida
 app.get('/api/protected', authenticate, (req, res) => {
