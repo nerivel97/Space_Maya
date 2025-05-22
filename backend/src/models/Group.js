@@ -1,3 +1,4 @@
+// models/Group.js
 import pool from '../config/db.js';
 
 class Group {
@@ -59,6 +60,14 @@ class Group {
   static async getMembersCount(groupId) {
     const [rows] = await pool.execute(
       'SELECT COUNT(*) as count FROM group_members WHERE group_id = ?',
+      [groupId]
+    );
+    return rows[0].count;
+  }
+
+  static async getMessagesCount(groupId) {
+    const [rows] = await pool.execute(
+      'SELECT COUNT(*) as count FROM group_messages WHERE group_id = ?',
       [groupId]
     );
     return rows[0].count;

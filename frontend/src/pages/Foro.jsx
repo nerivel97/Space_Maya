@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FaUniversity, FaUsers, FaSearch, FaPlus, FaBook, FaComments,
-  FaStar, FaUser, FaPaperPlane, FaTrash, FaEdit, FaBell, 
-  FaBellSlash, FaTimes, FaCheck, FaArrowLeft
+  FaStar, FaPaperPlane, FaArrowLeft
 } from 'react-icons/fa';
 import { MdGroups, MdNewReleases, MdTrendingUp } from 'react-icons/md';
 import api from '../api/api';
 import styles from '../styles/Foro.module.css';
 
 const Foro = () => {
-  // Estados principales
   const [activeTab, setActiveTab] = useState('grupos');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -17,13 +15,11 @@ const Foro = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Estados para el chat grupal
-  const [view, setView] = useState('groups'); // 'groups', 'chat', 'notifications'
+  const [view, setView] = useState('groups');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupMessages, setGroupMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
-  // Estados para formularios
   const [newGroup, setNewGroup] = useState({
     name: '',
     university: '',
@@ -32,60 +28,88 @@ const Foro = () => {
   });
 
   const universities = [
-    'UNAM', 'UADY', 'Universidad Autónoma de Campeche', 
+    'UNAM', 'UADY', 'Universidad Autónoma de Campeche',
     'Universidad de Quintana Roo', 'Universidad Autónoma de Chiapas'
   ];
 
-  // Funciones de fetch
   const fetchGroups = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { search: searchQuery };
-      if (activeTab === 'populares') params.featured = true;
-      
-      const { data } = await api.get('/forum/groups', { params });
-      setGroups(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError('Error al cargar los grupos');
-      console.error(err);
-      setGroups([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, searchQuery]);
+  setLoading(true);
+  setError('');
+  try {
+    const params = {};
+    if (searchQuery.trim()) params.search = searchQuery.trim();
+    if (activeTab === 'populares') params.tab = 'populares';
 
+    // Opción 1: Si mantienes el interceptor que retorna response.data
+    const responseData = await api.get('/forum/groups', { params });
+    const groupsData = Array.isArray(responseData) ? responseData : [];
+
+    // Opción 2: Si modificas el interceptor para retornar response completo
+    // const { data } = await api.get('/forum/groups', { params });
+    // const groupsData = Array.isArray(data) ? data : [];
+    
+    console.log('Datos de grupos:', groupsData); // Debug
+    
+    // Validación adicional de estructura de datos
+    const validatedGroups = groupsData.map(group => ({
+      id: group.id || 0,
+      name: group.name || 'Nombre no disponible',
+      description: group.description || 'Sin descripción',
+      university: group.university || 'Universidad no especificada',
+      is_public: group.is_public || 0,
+      is_featured: group.is_featured || 0,
+      members: group.members || 0,
+      messages: group.messages || 0,
+      lastActivity: group.lastActivity || 'Ninguna actividad reciente'
+    }));
+
+    setGroups(validatedGroups);
+  } catch (err) {
+    setError(err.message || 'Error al cargar los grupos');
+    console.error('Error en fetchGroups:', err);
+    setGroups([]);
+  } finally {
+    setLoading(false);
+  }
+}, [activeTab, searchQuery]);
+
+  // Función para obtener mensajes del grupo
   const fetchGroupMessages = useCallback(async (groupId) => {
-    setLoading(true);
-    try {
-      const { data } = await api.get(`/forum/groups/${groupId}/messages`);
-      setGroupMessages(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError('Error al cargar mensajes del grupo');
-      console.error(err);
-      setGroupMessages([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  setLoading(true);
+  setError('');
+  try {
+    // Cambia esto:
+    const response = await api.get(`/forum/groups/${groupId}/messages`);
+    
+    // Debug: Verifica la respuesta
+    console.log('Respuesta de mensajes:', response);
+    
+    // Asegúrate de que sea un array
+    const messagesData = Array.isArray(response) ? response : [];
+    
+    // Validación adicional de estructura
+    const validatedMessages = messagesData.map(message => ({
+      id: message.id || 0,
+      group_id: message.group_id || 0,
+      user_id: message.user_id || 0,
+      content: message.content || '',
+      created_at: message.created_at || new Date().toISOString(),
+      author_name: message.author_name || 'Usuario desconocido'
+    }));
+    
+    console.log('Mensajes validados:', validatedMessages);
+    
+    setGroupMessages(validatedMessages);
+  } catch (err) {
+    setError(err.message || 'Error al cargar mensajes');
+    console.error('Error en fetchGroupMessages:', err);
+    setGroupMessages([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
-  // Handlers
-  const handleCreateGroup = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/forum/groups', newGroup);
-      setShowCreateModal(false);
-      setNewGroup({
-        name: '',
-        university: '',
-        description: '',
-        isPublic: true
-      });
-      fetchGroups();
-    } catch (err) {
-      setError(err.message || 'Error al crear el grupo');
-    }
-  };
-
+  // Función para unirse a grupo
   const handleJoinGroup = async (groupId) => {
     try {
       await api.post(`/forum/groups/${groupId}/join`);
@@ -93,10 +117,11 @@ const Foro = () => {
         group.id === groupId ? { ...group, members: group.members + 1 } : group
       ));
     } catch (err) {
-      setError(err.message || 'Error al unirse al grupo');
+      setError(err.response?.data?.message || 'Error al unirse al grupo');
     }
   };
 
+  // Función para enviar mensaje
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -108,13 +133,15 @@ const Foro = () => {
       setNewMessage('');
       fetchGroupMessages(selectedGroup.id);
     } catch (err) {
-      setError(err.message || 'Error al enviar mensaje');
+      setError(err.response?.data?.message || 'Error al enviar mensaje');
     }
   };
 
-  // Efectos
+  // Efectos secundarios
   useEffect(() => {
-    if (view === 'groups') fetchGroups();
+    if (view === 'groups') {
+      fetchGroups();
+    }
   }, [view, fetchGroups]);
 
   useEffect(() => {
@@ -123,7 +150,7 @@ const Foro = () => {
     }
   }, [selectedGroup, fetchGroupMessages]);
 
-  // Vistas
+  // Renderizado de la vista de grupos
   const renderGroupsView = () => (
     <div className={styles.groupsContainer}>
       <h2 className={styles.sectionTitle}>
@@ -132,17 +159,15 @@ const Foro = () => {
         {activeTab === 'populares' && 'Grupos populares'}
       </h2>
 
+      {error && <div className={styles.errorAlert}>{error}</div>}
+
       {loading ? (
         <div className={styles.loading}>Cargando grupos...</div>
-      ) : groups.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No se encontraron grupos que coincidan con tu búsqueda.</p>
-        </div>
-      ) : (
+      ) : groups.length > 0 ? (
         <div className={styles.groupsGrid}>
           {groups.map(group => (
-            <div 
-              key={group.id} 
+            <div
+              key={group.id}
               className={`${styles.groupCard} ${group.is_featured ? styles.featured : ''}`}
               onClick={() => {
                 setSelectedGroup(group);
@@ -170,7 +195,8 @@ const Foro = () => {
                 </div>
               </div>
               <div className={styles.groupFooter}>
-                <button 
+                <span className={styles.lastActivity}>{group.lastActivity}</span>
+                <button
                   className={styles.joinButton}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -183,13 +209,24 @@ const Foro = () => {
             </div>
           ))}
         </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <p>No se encontraron grupos</p>
+          <button 
+            className={styles.createButton}
+            onClick={() => setShowCreateModal(true)}
+          >
+            <FaPlus /> Crear primer grupo
+          </button>
+        </div>
       )}
     </div>
   );
 
+  // Renderizado del chat de grupo
   const renderGroupChat = () => (
     <div className={styles.groupChatContainer}>
-      <button 
+      <button
         className={styles.backButton}
         onClick={() => {
           setSelectedGroup(null);
@@ -199,25 +236,23 @@ const Foro = () => {
         <FaArrowLeft /> Volver a grupos
       </button>
 
-      <h2 className={styles.groupTitle}>
-        <MdGroups /> {selectedGroup?.name}
-      </h2>
-      <p className={styles.groupDescription}>{selectedGroup?.description}</p>
+      <div className={styles.groupHeader}>
+        <h2 className={styles.groupTitle}>
+          <MdGroups /> {selectedGroup?.name}
+        </h2>
+        <p className={styles.groupDescription}>{selectedGroup?.description}</p>
+      </div>
 
       <div className={styles.messagesContainer}>
         {loading ? (
           <div className={styles.loading}>Cargando mensajes...</div>
-        ) : groupMessages.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No hay mensajes en este grupo aún. ¡Envía el primero!</p>
-          </div>
-        ) : (
+        ) : groupMessages.length > 0 ? (
           groupMessages.map(message => (
-            <div 
-              key={message.id} 
+            <div
+              key={message.id}
               className={`${styles.message} ${
-                message.user_id === parseInt(localStorage.getItem('userId')) 
-                  ? styles.ownMessage 
+                message.user_id === parseInt(localStorage.getItem('userId'))
+                  ? styles.ownMessage
                   : styles.otherMessage
               }`}
             >
@@ -228,14 +263,19 @@ const Foro = () => {
                     : message.author_name}
                 </span>
                 <span className={styles.time}>
-                  {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(message.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </span>
               </div>
-              <div className={styles.messageContent}>
-                {message.content}
-              </div>
+              <div className={styles.messageContent}>{message.content}</div>
             </div>
           ))
+        ) : (
+          <div className={styles.emptyState}>
+            <p>No hay mensajes en este grupo aún. ¡Envía el primero!</p>
+          </div>
         )}
       </div>
 
@@ -254,7 +294,6 @@ const Foro = () => {
     </div>
   );
 
-  // Renderizado principal
   return (
     <div className={styles.foroContainer}>
       <header className={styles.header}>
@@ -273,19 +312,19 @@ const Foro = () => {
               <div className={styles.sidebarSection}>
                 <h3 className={styles.sidebarTitle}>Menú</h3>
                 <ul className={styles.menuList}>
-                  <li 
+                  <li
                     className={`${styles.menuItem} ${activeTab === 'grupos' ? styles.active : ''}`}
                     onClick={() => setActiveTab('grupos')}
                   >
                     <MdGroups /> Grupos
                   </li>
-                  <li 
+                  <li
                     className={`${styles.menuItem} ${activeTab === 'nuevos' ? styles.active : ''}`}
                     onClick={() => setActiveTab('nuevos')}
                   >
                     <MdNewReleases /> Nuevos
                   </li>
-                  <li 
+                  <li
                     className={`${styles.menuItem} ${activeTab === 'populares' ? styles.active : ''}`}
                     onClick={() => setActiveTab('populares')}
                   >
@@ -298,10 +337,13 @@ const Foro = () => {
                 <h3 className={styles.sidebarTitle}>Universidades</h3>
                 <ul className={styles.universityList}>
                   {universities.map((uni, index) => (
-                    <li 
-                      key={index} 
+                    <li
+                      key={index}
                       className={styles.universityItem}
-                      onClick={() => setSearchQuery(uni)}
+                      onClick={() => {
+                        setSearchQuery(uni);
+                        setActiveTab('grupos');
+                      }}
                     >
                       <FaUniversity /> {uni}
                     </li>
@@ -319,18 +361,17 @@ const Foro = () => {
                     placeholder="Buscar grupos..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && fetchGroups()}
                     className={styles.searchInput}
                   />
                 </div>
-                <button 
+                <button
                   className={styles.createButton}
                   onClick={() => setShowCreateModal(true)}
                 >
                   <FaPlus /> Crear Grupo
                 </button>
               </div>
-
-              {error && <div className={styles.errorAlert}>{error}</div>}
 
               {renderGroupsView()}
             </div>
@@ -340,11 +381,11 @@ const Foro = () => {
         {view === 'chat' && renderGroupChat()}
       </div>
 
-      {/* Modal para crear nuevo grupo */}
+      {/* Modal para crear grupo */}
       {showCreateModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <button 
+            <button
               className={styles.closeModal}
               onClick={() => setShowCreateModal(false)}
             >
@@ -358,7 +399,7 @@ const Foro = () => {
                   type="text"
                   id="groupName"
                   value={newGroup.name}
-                  onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
+                  onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
                   required
                   placeholder="Ej: Estudios Mayas UNAM"
                 />
@@ -368,7 +409,7 @@ const Foro = () => {
                 <select
                   id="university"
                   value={newGroup.university}
-                  onChange={(e) => setNewGroup({...newGroup, university: e.target.value})}
+                  onChange={(e) => setNewGroup({ ...newGroup, university: e.target.value })}
                   required
                 >
                   <option value="">Selecciona una universidad</option>
@@ -382,7 +423,7 @@ const Foro = () => {
                 <textarea
                   id="description"
                   value={newGroup.description}
-                  onChange={(e) => setNewGroup({...newGroup, description: e.target.value})}
+                  onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
                   required
                   placeholder="Describe el propósito de este grupo..."
                   rows="4"
@@ -393,22 +434,22 @@ const Foro = () => {
                   <input
                     type="checkbox"
                     checked={newGroup.isPublic}
-                    onChange={(e) => setNewGroup({...newGroup, isPublic: e.target.checked})}
+                    onChange={(e) => setNewGroup({ ...newGroup, isPublic: e.target.checked })}
                   />
                   <span className={styles.checkboxCustom}></span>
                   Grupo público (cualquiera puede unirse)
                 </label>
               </div>
               <div className={styles.formActions}>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={styles.cancelButton}
                   onClick={() => setShowCreateModal(false)}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className={styles.submitButton}
                 >
                   Crear grupo
