@@ -48,11 +48,6 @@ const Foro = () => {
 
     socketRef.current.on('messageReceived', handleNewMessage);
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off('messageReceived', handleNewMessage);
-      }
-    };
   }, []);
 
   // Auto-scroll al final de los mensajes
