@@ -2,6 +2,7 @@
 import Group from '../models/Group.js';
 import Notification from '../models/Notification.js';
 import GroupMessage from '../models/GroupMessage.js';
+import pool from '../config/db.js';
 
 export const getGroups = async (req, res) => {
   try {

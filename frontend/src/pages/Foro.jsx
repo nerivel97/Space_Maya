@@ -202,10 +202,10 @@ const handleCreateGroup = async (e) => {
   }, [view, fetchGroups]);
 
   useEffect(() => {
-    if (selectedGroup) {
-      fetchGroupMessages(selectedGroup.id);
-    }
-  }, [selectedGroup, fetchGroupMessages]);
+  if (selectedGroup && api.socket.connected) {
+    api.joinGroup(selectedGroup.id);
+  }
+}, [selectedGroup]);
 
   // Renderizado de la vista de grupos
   const renderGroupsView = () => (
