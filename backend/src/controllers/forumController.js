@@ -1,13 +1,11 @@
-// controllers/forumController.js
 import Group from '../models/Group.js';
-import Notification from '../models/Notification.js';
 import GroupMessage from '../models/GroupMessage.js';
+import Notification from '../models/Notification.js';
 import pool from '../config/db.js';
 
 export const getGroups = async (req, res) => {
   try {
     const { search, university, tab } = req.query;
-
     const featured = tab === 'populares';
 
     const groups = await Group.findAll({ search, university, featured });
@@ -25,7 +23,19 @@ export const getGroups = async (req, res) => {
 
     res.json(enhancedGroups);
   } catch (error) {
+    console.error('Error al obtener grupos:', error);
     res.status(500).json({ message: 'Error al obtener grupos' });
+  }
+};
+
+export const getUserGroups = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const groups = await Group.findByUser(userId);
+    res.json(groups);
+  } catch (error) {
+    console.error('Error al obtener grupos del usuario:', error);
+    res.status(500).json({ message: 'Error al obtener grupos del usuario' });
   }
 };
 
@@ -50,6 +60,7 @@ export const createGroup = async (req, res) => {
 
     res.status(201).json({ id: groupId });
   } catch (error) {
+    console.error('Error al crear grupo:', error);
     res.status(500).json({ message: 'Error al crear grupo' });
   }
 };
@@ -70,37 +81,23 @@ export const joinGroup = async (req, res) => {
     await Group.addMember(groupId, userId);
     res.json({ message: 'Te has unido al grupo exitosamente' });
   } catch (error) {
+    console.error('Error al unirse al grupo:', error);
     res.status(500).json({ message: 'Error al unirse al grupo' });
-  }
-};
-
-export const getNotifications = async (req, res) => {
-  try {
-    const notifications = await Notification.findByUser(req.user.userId, {
-      unreadOnly: req.query.unread === 'true'
-    });
-    res.json(notifications);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener notificaciones' });
-  }
-};
-
-export const markNotificationAsRead = async (req, res) => {
-  try {
-    const { notificationId } = req.params;
-    await Notification.markAsRead(notificationId);
-    res.json({ message: 'Notificación marcada como leída' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error al marcar notificación' });
   }
 };
 
 export const getGroupMessages = async (req, res) => {
   try {
     const { groupId } = req.params;
+    const userId = req.user.userId;
+    
+    // Marcar mensajes como leídos al obtenerlos
+    await Group.updateLastRead(groupId, userId);
+    
     const messages = await GroupMessage.findByGroupId(groupId);
     res.json(messages);
   } catch (error) {
+    console.error('Error al obtener mensajes del grupo:', error);
     res.status(500).json({ message: 'Error al obtener mensajes del grupo' });
   }
 };
@@ -115,19 +112,33 @@ export const sendGroupMessage = async (req, res) => {
       return res.status(400).json({ message: 'El contenido no puede estar vacío' });
     }
 
-    await GroupMessage.create({ groupId, userId, content });
-    res.status(201).json({ message: 'Mensaje enviado correctamente' });
+    const messageId = await GroupMessage.create({ groupId, userId, content });
+    const message = await GroupMessage.findById(messageId);
+    
+    res.status(201).json(message);
   } catch (error) {
+    console.error('Error al enviar mensaje:', error);
     res.status(500).json({ message: 'Error al enviar mensaje' });
   }
 };
 
-// Añade esta función para guardar mensajes
-// En tu servidor (backend), modifica el controlador de mensajes:
+export const markMessagesAsRead = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const userId = req.user.userId;
+    
+    await Group.updateLastRead(groupId, userId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al marcar mensajes como leídos:', error);
+    res.status(500).json({ message: 'Error al marcar mensajes como leídos' });
+  }
+};
+
 export const saveMessageToDatabase = async (messageData) => {
   const { groupId, content, userId } = messageData;
   
-  // 1. Verificar si el mensaje ya existe
+  // Verificar si el mensaje ya existe
   const [existing] = await pool.execute(
     `SELECT id FROM group_messages 
      WHERE content = ? AND user_id = ? AND group_id = ? 
@@ -139,13 +150,13 @@ export const saveMessageToDatabase = async (messageData) => {
     throw new Error('Mensaje duplicado');
   }
 
-  // 2. Guardar el mensaje en la base de datos
+  // Guardar el mensaje
   const [result] = await pool.execute(
     'INSERT INTO group_messages (group_id, user_id, content) VALUES (?, ?, ?)',
     [groupId, userId, content]
   );
 
-  // 3. Obtener el mensaje completo con información del autor
+  // Obtener el mensaje completo con información del autor
   const [messages] = await pool.execute(
     `SELECT gm.*, u.name as author_name 
      FROM group_messages gm
@@ -159,4 +170,27 @@ export const saveMessageToDatabase = async (messageData) => {
   }
 
   return messages[0];
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.findByUser(req.user.userId, {
+      unreadOnly: req.query.unread === 'true'
+    });
+    res.json(notifications);
+  } catch (error) {
+    console.error('Error al obtener notificaciones:', error);
+    res.status(500).json({ message: 'Error al obtener notificaciones' });
+  }
+};
+
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    await Notification.markAsRead(notificationId);
+    res.json({ message: 'Notificación marcada como leída' });
+  } catch (error) {
+    console.error('Error al marcar notificación:', error);
+    res.status(500).json({ message: 'Error al marcar notificación' });
+  }
 };

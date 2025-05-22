@@ -2,20 +2,20 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs';
-import { createServer } from 'http'; // Importa createServer de http
-import { Server } from 'socket.io'; // Importa Server de socket.io
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes.js';
-import { authenticate } from './middlewares/auth.js';
 import markerRoutes from './routes/markerRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
-import { saveMessageToDatabase } from './controllers/forumController.js'; // Asegúrate de tener esta función
-import jwt from 'jsonwebtoken'; 
+import { authenticate } from './middlewares/auth.js';
+import { saveMessageToDatabase } from './controllers/forumController.js';
+import jwt from 'jsonwebtoken';
+import pool from '../src/config/db.js';
 
 dotenv.config();
 
 const app = express();
-const httpServer = createServer(app); // Crea el servidor HTTP
+const httpServer = createServer(app);
 
 // Configuración de Socket.io
 const io = new Server(httpServer, {
@@ -24,10 +24,10 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true
   },
-  path: '/socket.io' // Ruta base para Socket.io
+  path: '/socket.io'
 });
 
-// Middleware para autenticar conexiones Socket.io
+// Middleware de autenticación para Socket.io
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
 
@@ -37,51 +37,60 @@ io.use((socket, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    socket.userId = payload.userId; // ⬅️ Guarda el userId en el socket
+    socket.userId = payload.userId;
     next();
   } catch (err) {
     return next(new Error('Token inválido'));
   }
 });
 
-
-
 // Manejo de conexiones Socket.io
 io.on('connection', (socket) => {
-  console.log('Nuevo cliente conectado:', socket.id);
+  console.log(`Usuario conectado: ${socket.userId}`);
 
-  // Unirse a una sala de grupo
-  socket.on('joinGroup', (groupId) => {
-    socket.join(`group_${groupId}`);
-    console.log(`Usuario ${socket.id} unido al grupo ${groupId}`);
+  // Manejar reconexión
+  socket.on('reconnect', () => {
+    console.log(`Usuario reconectado: ${socket.userId}`);
   });
 
-  // Manejar nuevos mensajes
+  socket.on('joinGroup', async (groupId) => {
+    try {
+      socket.join(`group_${groupId}`);
+      console.log(`Usuario ${socket.userId} unido al grupo ${groupId}`);
+      
+      // Actualizar last_read_at
+      await pool.execute(
+        'UPDATE group_members SET last_read_at = NOW() WHERE group_id = ? AND user_id = ?',
+        [groupId, socket.userId]
+      );
+    } catch (error) {
+      console.error('Error joining group:', error);
+    }
+  });
+
   socket.on('newMessage', async (messageData) => {
-  try {
-    // Asegúrate de pasar el userId desde el socket
-    const fullData = {
-      ...messageData,
-      userId: socket.userId
-    };
+    try {
+      const savedMessage = await saveMessageToDatabase({
+        ...messageData,
+        userId: socket.userId
+      });
+      
+      io.to(`group_${messageData.groupId}`).emit('messageReceived', savedMessage);
+    } catch (error) {
+      console.error('Error al procesar mensaje:', error);
+      socket.emit('messageError', { 
+        error: 'Error al enviar mensaje',
+        tempId: messageData.tempId 
+      });
+    }
+  });
 
-    const savedMessage = await saveMessageToDatabase(fullData);
-
-    io.to(`group_${messageData.groupId}`).emit('messageReceived', savedMessage);
-  } catch (error) {
-    console.error('Error al procesar mensaje:', error);
-    socket.emit('messageError', { error: 'Error al enviar mensaje' });
-  }
-});
-
-
-  // Manejar desconexión
   socket.on('disconnect', () => {
-    console.log('Cliente desconectado:', socket.id);
+    console.log(`Usuario desconectado: ${socket.userId}`);
   });
 });
 
-// Configuración mejorada de CORS
+// Configuración de CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -91,12 +100,8 @@ app.use(cors({
 
 app.use(express.json());
 
-// Middleware para archivos estáticos (igual que antes)
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  next();
-}, express.static(path.join(path.resolve(), 'public', 'uploads'), {
+// Middleware para archivos estáticos
+app.use('/uploads', express.static(path.join(path.resolve(), 'public', 'uploads'), {
   dotfiles: 'ignore',
   etag: false,
   extensions: ['jpg', 'jpeg', 'png', 'gif'],
@@ -105,13 +110,12 @@ app.use('/uploads', (req, res, next) => {
   redirect: false
 }));
 
-// Rutas (igual que antes)
+// Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
-app.use('/api/profile', authRoutes);
 app.use('/api/forum', forumRoutes);
 
-// Ruta protegida
+// Ruta protegida de ejemplo
 app.get('/api/protected', authenticate, (req, res) => {
   res.json({ message: 'Ruta protegida', user: req.user });
 });
@@ -119,14 +123,12 @@ app.get('/api/protected', authenticate, (req, res) => {
 // Manejador de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Algo salió mal!');
+  res.status(500).json({ message: 'Algo salió mal!' });
 });
 
 const PORT = process.env.PORT || 5000;
 
-const uploadsDir = path.join(path.resolve(), 'public', 'uploads');
-
 httpServer.listen(PORT, () => {
   console.log(`Servidor HTTP y WebSocket corriendo en puerto ${PORT}`);
-  console.log(`Serving static files from: ${uploadsDir}`);
+  console.log(`URL del frontend: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
 });

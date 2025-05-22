@@ -1,4 +1,3 @@
-// models/Group.js
 import pool from '../config/db.js';
 
 class Group {
@@ -44,7 +43,7 @@ class Group {
 
   static async addMember(groupId, userId, isAdmin = false) {
     await pool.execute(
-      'INSERT INTO group_members (group_id, user_id, is_admin) VALUES (?, ?, ?)',
+      'INSERT INTO group_members (group_id, user_id, is_admin, last_read_at) VALUES (?, ?, ?, NOW())',
       [groupId, userId, isAdmin]
     );
   }
@@ -71,6 +70,51 @@ class Group {
       [groupId]
     );
     return rows[0].count;
+  }
+
+  static async findByUser(userId) {
+    const [rows] = await pool.execute(
+      `SELECT g.*, 
+       (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as members,
+       (SELECT COUNT(*) FROM group_messages WHERE group_id = g.id) as messages,
+       (SELECT content FROM group_messages WHERE group_id = g.id ORDER BY created_at DESC LIMIT 1) as last_message_content,
+       (SELECT COUNT(*) FROM group_messages 
+        WHERE group_id = g.id AND user_id != ? AND created_at > 
+        (SELECT last_read_at FROM group_members WHERE group_id = g.id AND user_id = ?)) as unread_count
+       FROM groups g
+       JOIN group_members gm ON g.id = gm.group_id
+       WHERE gm.user_id = ?`,
+      [userId, userId, userId]
+    );
+    
+    return rows.map(group => ({
+      ...group,
+      lastMessage: group.last_message_content ? { content: group.last_message_content } : null,
+      unreadCount: group.unread_count || 0
+    }));
+  }
+
+  static async updateLastRead(groupId, userId) {
+    await pool.execute(
+      'UPDATE group_members SET last_read_at = NOW() WHERE group_id = ? AND user_id = ?',
+      [groupId, userId]
+    );
+  }
+
+  static async getGroupWithStats(groupId, userId) {
+    const [groups] = await pool.execute(
+      `SELECT g.*,
+       (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as members,
+       (SELECT COUNT(*) FROM group_messages WHERE group_id = g.id) as messages,
+       (SELECT COUNT(*) FROM group_messages 
+        WHERE group_id = g.id AND user_id != ? AND created_at > 
+        (SELECT last_read_at FROM group_members WHERE group_id = g.id AND user_id = ?)) as unread_count
+       FROM groups g
+       WHERE g.id = ?`,
+      [userId, userId, groupId]
+    );
+    
+    return groups[0] || null;
   }
 }
 
