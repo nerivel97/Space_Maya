@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   FaUniversity, FaUsers, FaSearch, FaPlus, FaBook, FaComments,
   FaStar, FaPaperPlane, FaArrowLeft
@@ -8,189 +8,154 @@ import api from '../api/api';
 import styles from '../styles/Foro.module.css';
 import socket from '../socket';
 
-
 const Foro = () => {
+  // Estados y referencias
   const [activeTab, setActiveTab] = useState('grupos');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const [view, setView] = useState('groups');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupMessages, setGroupMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-
+  const [isSending, setIsSending] = useState(false);
   const [newGroup, setNewGroup] = useState({
     name: '',
     university: '',
     description: '',
     isPublic: true
   });
+  
+  const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
+  // Universidades disponibles
   const universities = [
     'UNAM', 'UADY', 'Universidad Autónoma de Campeche',
     'Universidad de Quintana Roo', 'Universidad Autónoma de Chiapas'
   ];
 
-
-  // Dentro de tu componente Foro:
+  // Configuración de Socket.io
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      socket.auth = { token };
-      socket.connect();
-    }
+    api.connectSocket();
+    socketRef.current = api.socket;
 
-    socket.on('messageReceived', (newMessage) => {
+    const handleNewMessage = (newMessage) => {
       setGroupMessages(prev => [...prev, newMessage]);
-    });
+    };
 
-    socket.on('connect_error', (err) => {
-      console.error('Error de conexión Socket.io:', err);
-    });
+    socketRef.current.on('messageReceived', handleNewMessage);
 
     return () => {
-      socket.off('messageReceived');
-      socket.off('connect_error');
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.off('messageReceived', handleNewMessage);
+      }
     };
   }, []);
 
+  // Auto-scroll al final de los mensajes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [groupMessages]);
+
+  // Obtener grupos
   const fetchGroups = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const params = {};
-      if (searchQuery.trim()) params.search = searchQuery.trim();
+      const params = { search: searchQuery.trim() };
       if (activeTab === 'populares') params.tab = 'populares';
 
-      // Opción 1: Si mantienes el interceptor que retorna response.data
-      const responseData = await api.get('/forum/groups', { params });
-      const groupsData = Array.isArray(responseData) ? responseData : [];
-
-      // Opción 2: Si modificas el interceptor para retornar response completo
-      // const { data } = await api.get('/forum/groups', { params });
-      // const groupsData = Array.isArray(data) ? data : [];
-
-      console.log('Datos de grupos:', groupsData); // Debug
-
-      // Validación adicional de estructura de datos
-      const validatedGroups = groupsData.map(group => ({
-        id: group.id || 0,
-        name: group.name || 'Nombre no disponible',
-        description: group.description || 'Sin descripción',
-        university: group.university || 'Universidad no especificada',
-        is_public: group.is_public || 0,
-        is_featured: group.is_featured || 0,
-        members: group.members || 0,
-        messages: group.messages || 0,
-        lastActivity: group.lastActivity || 'Ninguna actividad reciente'
-      }));
-
-      setGroups(validatedGroups);
+      const response = await api.get('/forum/groups', { params });
+      setGroups(Array.isArray(response) ? response : []);
     } catch (err) {
-      setError(err.message || 'Error al cargar los grupos');
-      console.error('Error en fetchGroups:', err);
+      setError(err.message || 'Error al cargar grupos');
+      console.error('Error fetching groups:', err);
       setGroups([]);
     } finally {
       setLoading(false);
     }
   }, [activeTab, searchQuery]);
 
-  // Función para obtener mensajes del grupo
+  // Obtener mensajes del grupo
   const fetchGroupMessages = useCallback(async (groupId) => {
     setLoading(true);
     setError('');
     try {
-      // Cambia esto:
       const response = await api.get(`/forum/groups/${groupId}/messages`);
-
-      // Debug: Verifica la respuesta
-      console.log('Respuesta de mensajes:', response);
-
-      // Asegúrate de que sea un array
-      const messagesData = Array.isArray(response) ? response : [];
-
-      // Validación adicional de estructura
-      const validatedMessages = messagesData.map(message => ({
-        id: message.id || 0,
-        group_id: message.group_id || 0,
-        user_id: message.user_id || 0,
-        content: message.content || '',
-        created_at: message.created_at || new Date().toISOString(),
-        author_name: message.author_name || 'Usuario desconocido'
-      }));
-
-      console.log('Mensajes validados:', validatedMessages);
-
-      setGroupMessages(validatedMessages);
+      setGroupMessages(Array.isArray(response) ? response : []);
     } catch (err) {
       setError(err.message || 'Error al cargar mensajes');
-      console.error('Error en fetchGroupMessages:', err);
+      console.error('Error fetching messages:', err);
       setGroupMessages([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Manejar selección de grupo
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchGroupMessages(selectedGroup.id);
+      api.joinGroup(selectedGroup.id);
+    }
+  }, [selectedGroup, fetchGroupMessages]);
+
+  // Manejar vista de grupos
+  useEffect(() => {
+    if (view === 'groups') {
+      fetchGroups();
+    }
+  }, [view, fetchGroups]);
+
+  // Crear grupo
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     try {
-      // Asegúrate de que newGroup tenga los campos correctos
-      const groupToCreate = {
-        name: newGroup.name,
-        description: newGroup.description,
-        university: newGroup.university,
-        is_public: newGroup.isPublic ? 1 : 0, // Asegúrate que coincida con tu API
-        created_by: parseInt(localStorage.getItem('userId')) // Asumiendo que guardas el ID así
-      };
-
-      const response = await api.post('/forum/groups', groupToCreate);
-      console.log('Grupo creado:', response);
-
+      await api.post('/forum/groups', newGroup);
       setShowCreateModal(false);
-      setNewGroup({
-        name: '',
-        university: '',
-        description: '',
-        isPublic: true
-      });
-
-      // Recargar los grupos
+      setNewGroup({ name: '', university: '', description: '', isPublic: true });
       fetchGroups();
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al crear el grupo');
-      console.error('Error al crear grupo:', err);
+      setError(err.message || 'Error al crear grupo');
     }
   };
 
-  // Función para unirse a grupo
-  const handleJoinGroup = async (groupId) => {
+  // Unirse a grupo
+  const handleJoinGroup = async (groupId, e) => {
+    e?.stopPropagation();
     try {
       await api.post(`/forum/groups/${groupId}/join`);
-      setGroups(groups.map(group =>
+      setGroups(groups.map(group => 
         group.id === groupId ? { ...group, members: group.members + 1 } : group
       ));
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al unirse al grupo');
+      setError(err.message || 'Error al unirse al grupo');
     }
   };
 
-  // Función para enviar mensaje
-  const handleSendMessage = (e) => {
+  // Enviar mensaje
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedGroup || isSending) return;
 
-    const messageData = {
-      content: newMessage,
-      groupId: selectedGroup.id,
-      userId: parseInt(localStorage.getItem('userId')) || 0
-    };
-
-    socket.emit('newMessage', messageData);
-    setNewMessage('');
+    setIsSending(true);
+    try {
+      const messageData = {
+        groupId: selectedGroup.id,
+        content: newMessage,
+        userId: parseInt(localStorage.getItem('userId'))
+      };
+      api.sendMessage(messageData);
+      setNewMessage('');
+    } catch (err) {
+      setError('Error al enviar mensaje');
+      console.error(err);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Efectos secundarios
@@ -201,19 +166,19 @@ const Foro = () => {
   }, [view, fetchGroups]);
 
   useEffect(() => {
-  socket.on('messageReceived', (msg) => {
-    setGroupMessages(prev => [...prev, msg]);
-  });
+    socket.on('messageReceived', (msg) => {
+      setGroupMessages(prev => [...prev, msg]);
+    });
 
-  socket.on('connect_error', (err) => {
-    console.error('Socket.io error:', err);
-  });
+    socket.on('connect_error', (err) => {
+      console.error('Socket.io error:', err);
+    });
 
-  return () => {
-    socket.off('messageReceived');
-    socket.off('connect_error');
-  };
-}, []);
+    return () => {
+      socket.off('messageReceived');
+      socket.off('connect_error');
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedGroup) {
@@ -331,10 +296,10 @@ const Foro = () => {
         ) : groupMessages.length > 0 ? (
           groupMessages.map(message => (
             <div
-              key={message.id}
+              key={`${message.id}_${message.created_at}`} // Combina ID y timestamp para garantizar unicidad
               className={`${styles.message} ${message.user_id === parseInt(localStorage.getItem('userId'))
-                ? styles.ownMessage
-                : styles.otherMessage
+                  ? styles.ownMessage
+                  : styles.otherMessage
                 }`}
             >
               <div className={styles.messageHeader}>
