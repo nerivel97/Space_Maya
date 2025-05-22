@@ -10,6 +10,7 @@ import { authenticate } from './middlewares/auth.js';
 import markerRoutes from './routes/markerRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
 import { saveMessageToDatabase } from './controllers/forumController.js'; // Asegúrate de tener esta función
+import jwt from 'jsonwebtoken'; 
 
 dotenv.config();
 
@@ -29,12 +30,21 @@ const io = new Server(httpServer, {
 // Middleware para autenticar conexiones Socket.io
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
+
   if (!token) {
     return next(new Error('No se proporcionó token'));
   }
-  // Aquí deberías verificar el token JWT como lo haces en tus rutas HTTP
-  next();
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = payload.userId; // ⬅️ Guarda el userId en el socket
+    next();
+  } catch (err) {
+    return next(new Error('Token inválido'));
+  }
 });
+
+
 
 // Manejo de conexiones Socket.io
 io.on('connection', (socket) => {
@@ -48,19 +58,22 @@ io.on('connection', (socket) => {
 
   // Manejar nuevos mensajes
   socket.on('newMessage', async (messageData) => {
-    try {
-      // 1. Guardar el mensaje en la base de datos
-      const savedMessage = await saveMessageToDatabase(messageData);
-      
-      // 2. Emitir el mensaje a todos en el grupo
-      io.to(`group_${messageData.groupId}`).emit('messageReceived', savedMessage);
-      
-      console.log('Mensaje enviado a grupo:', messageData.groupId);
-    } catch (error) {
-      console.error('Error al procesar mensaje:', error);
-      socket.emit('messageError', { error: 'Error al enviar mensaje' });
-    }
-  });
+  try {
+    // Asegúrate de pasar el userId desde el socket
+    const fullData = {
+      ...messageData,
+      userId: socket.userId
+    };
+
+    const savedMessage = await saveMessageToDatabase(fullData);
+
+    io.to(`group_${messageData.groupId}`).emit('messageReceived', savedMessage);
+  } catch (error) {
+    console.error('Error al procesar mensaje:', error);
+    socket.emit('messageError', { error: 'Error al enviar mensaje' });
+  }
+});
+
 
   // Manejar desconexión
   socket.on('disconnect', () => {

@@ -35,142 +35,142 @@ const Foro = () => {
   ];
 
 
-// Dentro de tu componente Foro:
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    socket.auth = { token };
-    socket.connect();
-  }
+  // Dentro de tu componente Foro:
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      socket.auth = { token };
+      socket.connect();
+    }
 
-  socket.on('messageReceived', (newMessage) => {
-    setGroupMessages(prev => [...prev, newMessage]);
-  });
+    socket.on('messageReceived', (newMessage) => {
+      setGroupMessages(prev => [...prev, newMessage]);
+    });
 
-  socket.on('connect_error', (err) => {
-    console.error('Error de conexión Socket.io:', err);
-  });
+    socket.on('connect_error', (err) => {
+      console.error('Error de conexión Socket.io:', err);
+    });
 
-  return () => {
-    socket.off('messageReceived');
-    socket.off('connect_error');
-    socket.disconnect();
-  };
-}, []);
+    return () => {
+      socket.off('messageReceived');
+      socket.off('connect_error');
+      socket.disconnect();
+    };
+  }, []);
 
   const fetchGroups = useCallback(async () => {
-  setLoading(true);
-  setError('');
-  try {
-    const params = {};
-    if (searchQuery.trim()) params.search = searchQuery.trim();
-    if (activeTab === 'populares') params.tab = 'populares';
+    setLoading(true);
+    setError('');
+    try {
+      const params = {};
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (activeTab === 'populares') params.tab = 'populares';
 
-    // Opción 1: Si mantienes el interceptor que retorna response.data
-    const responseData = await api.get('/forum/groups', { params });
-    const groupsData = Array.isArray(responseData) ? responseData : [];
+      // Opción 1: Si mantienes el interceptor que retorna response.data
+      const responseData = await api.get('/forum/groups', { params });
+      const groupsData = Array.isArray(responseData) ? responseData : [];
 
-    // Opción 2: Si modificas el interceptor para retornar response completo
-    // const { data } = await api.get('/forum/groups', { params });
-    // const groupsData = Array.isArray(data) ? data : [];
-    
-    console.log('Datos de grupos:', groupsData); // Debug
-    
-    // Validación adicional de estructura de datos
-    const validatedGroups = groupsData.map(group => ({
-      id: group.id || 0,
-      name: group.name || 'Nombre no disponible',
-      description: group.description || 'Sin descripción',
-      university: group.university || 'Universidad no especificada',
-      is_public: group.is_public || 0,
-      is_featured: group.is_featured || 0,
-      members: group.members || 0,
-      messages: group.messages || 0,
-      lastActivity: group.lastActivity || 'Ninguna actividad reciente'
-    }));
+      // Opción 2: Si modificas el interceptor para retornar response completo
+      // const { data } = await api.get('/forum/groups', { params });
+      // const groupsData = Array.isArray(data) ? data : [];
 
-    setGroups(validatedGroups);
-  } catch (err) {
-    setError(err.message || 'Error al cargar los grupos');
-    console.error('Error en fetchGroups:', err);
-    setGroups([]);
-  } finally {
-    setLoading(false);
-  }
-}, [activeTab, searchQuery]);
+      console.log('Datos de grupos:', groupsData); // Debug
+
+      // Validación adicional de estructura de datos
+      const validatedGroups = groupsData.map(group => ({
+        id: group.id || 0,
+        name: group.name || 'Nombre no disponible',
+        description: group.description || 'Sin descripción',
+        university: group.university || 'Universidad no especificada',
+        is_public: group.is_public || 0,
+        is_featured: group.is_featured || 0,
+        members: group.members || 0,
+        messages: group.messages || 0,
+        lastActivity: group.lastActivity || 'Ninguna actividad reciente'
+      }));
+
+      setGroups(validatedGroups);
+    } catch (err) {
+      setError(err.message || 'Error al cargar los grupos');
+      console.error('Error en fetchGroups:', err);
+      setGroups([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, searchQuery]);
 
   // Función para obtener mensajes del grupo
   const fetchGroupMessages = useCallback(async (groupId) => {
-  setLoading(true);
-  setError('');
-  try {
-    // Cambia esto:
-    const response = await api.get(`/forum/groups/${groupId}/messages`);
-    
-    // Debug: Verifica la respuesta
-    console.log('Respuesta de mensajes:', response);
-    
-    // Asegúrate de que sea un array
-    const messagesData = Array.isArray(response) ? response : [];
-    
-    // Validación adicional de estructura
-    const validatedMessages = messagesData.map(message => ({
-      id: message.id || 0,
-      group_id: message.group_id || 0,
-      user_id: message.user_id || 0,
-      content: message.content || '',
-      created_at: message.created_at || new Date().toISOString(),
-      author_name: message.author_name || 'Usuario desconocido'
-    }));
-    
-    console.log('Mensajes validados:', validatedMessages);
-    
-    setGroupMessages(validatedMessages);
-  } catch (err) {
-    setError(err.message || 'Error al cargar mensajes');
-    console.error('Error en fetchGroupMessages:', err);
-    setGroupMessages([]);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+    setLoading(true);
+    setError('');
+    try {
+      // Cambia esto:
+      const response = await api.get(`/forum/groups/${groupId}/messages`);
 
-const handleCreateGroup = async (e) => {
-  e.preventDefault();
-  try {
-    // Asegúrate de que newGroup tenga los campos correctos
-    const groupToCreate = {
-      name: newGroup.name,
-      description: newGroup.description,
-      university: newGroup.university,
-      is_public: newGroup.isPublic ? 1 : 0, // Asegúrate que coincida con tu API
-      created_by: parseInt(localStorage.getItem('userId')) // Asumiendo que guardas el ID así
-    };
+      // Debug: Verifica la respuesta
+      console.log('Respuesta de mensajes:', response);
 
-    const response = await api.post('/forum/groups', groupToCreate);
-    console.log('Grupo creado:', response);
+      // Asegúrate de que sea un array
+      const messagesData = Array.isArray(response) ? response : [];
 
-    setShowCreateModal(false);
-    setNewGroup({
-      name: '',
-      university: '',
-      description: '',
-      isPublic: true
-    });
-    
-    // Recargar los grupos
-    fetchGroups();
-  } catch (err) {
-    setError(err.response?.data?.message || 'Error al crear el grupo');
-    console.error('Error al crear grupo:', err);
-  }
-};
+      // Validación adicional de estructura
+      const validatedMessages = messagesData.map(message => ({
+        id: message.id || 0,
+        group_id: message.group_id || 0,
+        user_id: message.user_id || 0,
+        content: message.content || '',
+        created_at: message.created_at || new Date().toISOString(),
+        author_name: message.author_name || 'Usuario desconocido'
+      }));
+
+      console.log('Mensajes validados:', validatedMessages);
+
+      setGroupMessages(validatedMessages);
+    } catch (err) {
+      setError(err.message || 'Error al cargar mensajes');
+      console.error('Error en fetchGroupMessages:', err);
+      setGroupMessages([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    try {
+      // Asegúrate de que newGroup tenga los campos correctos
+      const groupToCreate = {
+        name: newGroup.name,
+        description: newGroup.description,
+        university: newGroup.university,
+        is_public: newGroup.isPublic ? 1 : 0, // Asegúrate que coincida con tu API
+        created_by: parseInt(localStorage.getItem('userId')) // Asumiendo que guardas el ID así
+      };
+
+      const response = await api.post('/forum/groups', groupToCreate);
+      console.log('Grupo creado:', response);
+
+      setShowCreateModal(false);
+      setNewGroup({
+        name: '',
+        university: '',
+        description: '',
+        isPublic: true
+      });
+
+      // Recargar los grupos
+      fetchGroups();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al crear el grupo');
+      console.error('Error al crear grupo:', err);
+    }
+  };
 
   // Función para unirse a grupo
   const handleJoinGroup = async (groupId) => {
     try {
       await api.post(`/forum/groups/${groupId}/join`);
-      setGroups(groups.map(group => 
+      setGroups(groups.map(group =>
         group.id === groupId ? { ...group, members: group.members + 1 } : group
       ));
     } catch (err) {
@@ -179,19 +179,18 @@ const handleCreateGroup = async (e) => {
   };
 
   // Función para enviar mensaje
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    try {
-      await api.post(`/forum/groups/${selectedGroup.id}/messages`, {
-        content: newMessage
-      });
-      setNewMessage('');
-      fetchGroupMessages(selectedGroup.id);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al enviar mensaje');
-    }
+    const messageData = {
+      content: newMessage,
+      groupId: selectedGroup.id,
+      userId: parseInt(localStorage.getItem('userId')) || 0
+    };
+
+    socket.emit('newMessage', messageData);
+    setNewMessage('');
   };
 
   // Efectos secundarios
@@ -202,10 +201,36 @@ const handleCreateGroup = async (e) => {
   }, [view, fetchGroups]);
 
   useEffect(() => {
-  if (selectedGroup && api.socket.connected) {
-    api.joinGroup(selectedGroup.id);
-  }
-}, [selectedGroup]);
+  socket.on('messageReceived', (msg) => {
+    setGroupMessages(prev => [...prev, msg]);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('Socket.io error:', err);
+  });
+
+  return () => {
+    socket.off('messageReceived');
+    socket.off('connect_error');
+  };
+}, []);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      // Cargar los mensajes al abrir el grupo
+      fetchGroupMessages(selectedGroup.id);
+
+      // Unirse a la sala del grupo
+      if (socket.connected) {
+        socket.emit('joinGroup', selectedGroup.id);
+      } else {
+        socket.connect();
+        socket.on('connect', () => {
+          socket.emit('joinGroup', selectedGroup.id);
+        });
+      }
+    }
+  }, [selectedGroup]);
 
   // Renderizado de la vista de grupos
   const renderGroupsView = () => (
@@ -269,7 +294,7 @@ const handleCreateGroup = async (e) => {
       ) : (
         <div className={styles.emptyState}>
           <p>No se encontraron grupos</p>
-          <button 
+          <button
             className={styles.createButton}
             onClick={() => setShowCreateModal(true)}
           >
@@ -307,11 +332,10 @@ const handleCreateGroup = async (e) => {
           groupMessages.map(message => (
             <div
               key={message.id}
-              className={`${styles.message} ${
-                message.user_id === parseInt(localStorage.getItem('userId'))
-                  ? styles.ownMessage
-                  : styles.otherMessage
-              }`}
+              className={`${styles.message} ${message.user_id === parseInt(localStorage.getItem('userId'))
+                ? styles.ownMessage
+                : styles.otherMessage
+                }`}
             >
               <div className={styles.messageHeader}>
                 <span className={styles.sender}>
