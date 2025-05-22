@@ -303,7 +303,10 @@ const Foro = () => {
         <h2>Discusiones en {selectedGroup?.name}</h2>
         <button
           className={styles.createButton}
-          onClick={() => setNewDiscussion({ title: '', content: '' })}
+          onClick={() => {
+            setNewDiscussion({ title: '', content: '' });
+            setShowDiscussionModal(true); // Esta línea es crucial
+          }}
         >
           <FaPlus /> Nueva Discusión
         </button>
