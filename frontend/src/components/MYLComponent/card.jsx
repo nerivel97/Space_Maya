@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import styles from './card.module.css';
 
-const Card = ({ image, title, description, fullDescription }) => { // Añadimos `fullDescription`
-  const [showDetails, setShowDetails] = useState(false); // Estado para el modal
+const Card = ({ image, title, description, fullDescription }) => {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const handleOverlayClick = () => {
+    setShowDetails(false);
+  };
+
+  const handleModalClick = (e) => {
+    // Evita que el clic dentro del modal cierre el modal
+    e.stopPropagation();
+  };
 
   return (
     <div className={styles.card}>
@@ -13,17 +22,16 @@ const Card = ({ image, title, description, fullDescription }) => { // Añadimos 
         <button onClick={() => setShowDetails(true)}>Ver más</button>
       </div>
 
-      {/* Modal de detalles */}
       {showDetails && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <button 
-              className={styles.closeButton} 
+        <div className={styles.modalOverlay} onClick={handleOverlayClick}>
+          <div className={styles.modal} onClick={handleModalClick}>
+            <button
+              className={styles.closeButton}
               onClick={() => setShowDetails(false)}
             >
               ×
             </button>
-            <img src={image} alt={title} />
+            <img src={image || 'https://via.placeholder.com/350x200'} alt={title} />
             <h2>{title}</h2>
             <p className={styles.fullDescription}>
               {fullDescription || 'Aquí irían los detalles completos desde tu backend.'}
