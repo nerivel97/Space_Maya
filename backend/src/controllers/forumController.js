@@ -123,16 +123,29 @@ export const sendGroupMessage = async (req, res) => {
 };
 
 // Añade esta función para guardar mensajes
+// En tu servidor (backend), modifica el controlador de mensajes:
 export const saveMessageToDatabase = async (messageData) => {
   const { groupId, content, userId } = messageData;
   
-  // 1. Guardar el mensaje en la base de datos
+  // 1. Verificar si el mensaje ya existe
+  const [existing] = await pool.execute(
+    `SELECT id FROM group_messages 
+     WHERE content = ? AND user_id = ? AND group_id = ? 
+     AND created_at > DATE_SUB(NOW(), INTERVAL 5 SECOND)`,
+    [content, userId, groupId]
+  );
+
+  if (existing.length > 0) {
+    throw new Error('Mensaje duplicado');
+  }
+
+  // 2. Guardar el mensaje en la base de datos
   const [result] = await pool.execute(
     'INSERT INTO group_messages (group_id, user_id, content) VALUES (?, ?, ?)',
     [groupId, userId, content]
   );
 
-  // 2. Obtener el mensaje completo con información del autor
+  // 3. Obtener el mensaje completo con información del autor
   const [messages] = await pool.execute(
     `SELECT gm.*, u.name as author_name 
      FROM group_messages gm

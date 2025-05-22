@@ -27,7 +27,7 @@ const Foro = () => {
     description: '',
     isPublic: true
   });
-  
+
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
@@ -39,16 +39,35 @@ const Foro = () => {
 
   // Configuración de Socket.io
   useEffect(() => {
-    api.connectSocket();
-    socketRef.current = api.socket;
+  // Conectar el socket solo una vez
+  api.connectSocket();
+  socketRef.current = api.socket;
 
-    const handleNewMessage = (newMessage) => {
-      setGroupMessages(prev => [...prev, newMessage]);
-    };
+  const handleNewMessage = (newMessage) => {
+    setGroupMessages(prev => {
+      // Verificar si el mensaje ya existe para evitar duplicados
+      const messageExists = prev.some(msg => 
+        msg.id === newMessage.id && 
+        msg.created_at === newMessage.created_at
+      );
+      
+      if (!messageExists && (!selectedGroup || newMessage.group_id === selectedGroup.id)) {
+        return [...prev, newMessage];
+      }
+      return prev;
+    });
+  };
 
-    socketRef.current.on('messageReceived', handleNewMessage);
+  // Configurar listeners
+  socketRef.current.on('messageReceived', handleNewMessage);
 
-  }, []);
+  return () => {
+    // Limpiar listeners al desmontar
+    if (socketRef.current) {
+      socketRef.current.off('messageReceived', handleNewMessage);
+    }
+  };
+}, [selectedGroup]);
 
   // Auto-scroll al final de los mensajes
   useEffect(() => {
@@ -123,7 +142,7 @@ const Foro = () => {
     e?.stopPropagation();
     try {
       await api.post(`/forum/groups/${groupId}/join`);
-      setGroups(groups.map(group => 
+      setGroups(groups.map(group =>
         group.id === groupId ? { ...group, members: group.members + 1 } : group
       ));
     } catch (err) {
@@ -162,7 +181,13 @@ const Foro = () => {
 
   useEffect(() => {
     socket.on('messageReceived', (msg) => {
-      setGroupMessages(prev => [...prev, msg]);
+      setGroupMessages(prev => {
+        // Evita duplicados basados en id y created_at
+        const exists = prev.some(m => m.id === msg.id && m.created_at === msg.created_at);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
+
     });
 
     socket.on('connect_error', (err) => {
@@ -289,9 +314,9 @@ const Foro = () => {
         {loading ? (
           <div className={styles.loading}>Cargando mensajes...</div>
         ) : groupMessages.length > 0 ? (
-          groupMessages.map(message => (
+          groupMessages.map((message, index) => (
             <div
-              key={`${message.id}_${message.created_at}`} // Combina ID y timestamp para garantizar unicidad
+              key={`${message.id}_${message.created_at}_${index}`} // Combina ID, timestamp e índice para unicidad
               className={`${styles.message} ${message.user_id === parseInt(localStorage.getItem('userId'))
                   ? styles.ownMessage
                   : styles.otherMessage
@@ -306,7 +331,7 @@ const Foro = () => {
                 <span className={styles.time}>
                   {new Date(message.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </span>
               </div>
@@ -319,6 +344,7 @@ const Foro = () => {
           </div>
         )}
       </div>
+
 
       <form onSubmit={handleSendMessage} className={styles.messageForm}>
         <textarea
