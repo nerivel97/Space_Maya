@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 
 // Configuración de Axios
 const api = axios.create({
-  baseURL: 'http://192.168.100.19:5000/api',
+  baseURL: 'http://localhost:5000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,7 +12,7 @@ const api = axios.create({
 });
 
 // Configuración de Socket.io
-const socket = io('http://192.168.100.19:5000', {
+const socket = io('http://localhost:5000', {
   autoConnect: false,
   withCredentials: true,
   reconnection: true,
