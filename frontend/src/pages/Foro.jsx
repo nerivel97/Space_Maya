@@ -180,19 +180,18 @@ const handleCreateGroup = async (e) => {
 
   // Función para enviar mensaje
   const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
+  e.preventDefault();
+  if (!newMessage.trim()) return;
 
-    try {
-      await api.post(`/forum/groups/${selectedGroup.id}/messages`, {
-        content: newMessage
-      });
-      setNewMessage('');
-      fetchGroupMessages(selectedGroup.id);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Error al enviar mensaje');
-    }
+  const messageData = {
+    content: newMessage,
+    groupId: selectedGroup.id,
+    userId: parseInt(localStorage.getItem('userId')),
   };
+
+  socket.emit('newMessage', messageData);
+  setNewMessage('');
+};
 
   // Efectos secundarios
   useEffect(() => {
