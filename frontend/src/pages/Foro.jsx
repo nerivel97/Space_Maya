@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   FaUniversity, FaUsers, FaSearch, FaPlus, FaBook, FaComments,
-  FaStar, FaUser, FaPaperPlane,
-  FaTrash, FaEdit, FaBell, FaBellSlash, FaTimes, FaCheck, FaArrowLeft
+  FaStar, FaUser, FaPaperPlane, FaTrash, FaEdit, FaBell, 
+  FaBellSlash, FaTimes, FaCheck, FaArrowLeft
 } from 'react-icons/fa';
 import { MdGroups, MdNewReleases, MdTrendingUp } from 'react-icons/md';
 import api from '../api/api';
@@ -17,6 +17,12 @@ const Foro = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Estados para el chat grupal
+  const [view, setView] = useState('groups'); // 'groups', 'chat', 'notifications'
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupMessages, setGroupMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+
   // Estados para formularios
   const [newGroup, setNewGroup] = useState({
     name: '',
@@ -24,54 +30,21 @@ const Foro = () => {
     description: '',
     isPublic: true
   });
-  const [newDiscussion, setNewDiscussion] = useState({
-    title: '',
-    content: ''
-  });
-  const [newMessage, setNewMessage] = useState('');
-
-  // Estados para navegación
-  const [view, setView] = useState('groups'); // 'groups', 'discussions', 'messages', 'notifications'
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [selectedDiscussion, setSelectedDiscussion] = useState(null);
-
-  // Estados para datos
-  const [discussions, setDiscussions] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [showUnreadOnly, setShowUnreadOnly] = useState(true);
-  const [editingMessage, setEditingMessage] = useState(null);
-  const [showDiscussionModal, setShowDiscussionModal] = useState(false);
 
   const universities = [
-    'UNAM', 'UADY', 'Universidad Autónoma de Campeche',
+    'UNAM', 'UADY', 'Universidad Autónoma de Campeche', 
     'Universidad de Quintana Roo', 'Universidad Autónoma de Chiapas'
   ];
 
-  // Funciones de fetch con useCallback
+  // Funciones de fetch
   const fetchGroups = useCallback(async () => {
     setLoading(true);
     try {
       const params = { search: searchQuery };
       if (activeTab === 'populares') params.featured = true;
-
-      // Cambia esta parte:
-      const response = await api.get('/forum/groups', { params });
-
-      // Si la respuesta es directamente el array:
-      if (Array.isArray(response)) {
-        setGroups(response);
-      }
-      // Si la respuesta es { data: [...] } (como axios normalmente devuelve)
-      else if (response.data && Array.isArray(response.data)) {
-        setGroups(response.data);
-      }
-      // Si no es ninguno de los formatos esperados
-      else {
-        console.error("Formato de respuesta inesperado:", response);
-        setGroups([]);
-      }
-
+      
+      const { data } = await api.get('/forum/groups', { params });
+      setGroups(Array.isArray(data) ? data : []);
     } catch (err) {
       setError('Error al cargar los grupos');
       console.error(err);
@@ -81,51 +54,19 @@ const Foro = () => {
     }
   }, [activeTab, searchQuery]);
 
-  const fetchDiscussions = useCallback(async (groupId) => {
+  const fetchGroupMessages = useCallback(async (groupId) => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/forum/groups/${groupId}/discussions`);
-      setDiscussions(data);
+      const { data } = await api.get(`/forum/groups/${groupId}/messages`);
+      setGroupMessages(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Error al cargar las discusiones');
+      setError('Error al cargar mensajes del grupo');
       console.error(err);
+      setGroupMessages([]);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  const fetchMessages = useCallback(async (discussionId) => {
-    setLoading(true);
-    try {
-      const { data } = await api.get(`/forum/discussions/${discussionId}/messages`);
-      setMessages(data);
-    } catch (err) {
-      setError('Error al cargar los mensajes');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = showUnreadOnly ? { unread: 'true' } : {};
-      const { data } = await api.get('/forum/notifications', { params });
-      setNotifications(data);
-    } catch (err) {
-      setError('Error al cargar notificaciones');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [showUnreadOnly]);
-
-  // Efectos
-  useEffect(() => {
-    if (view === 'groups') fetchGroups();
-    if (view === 'notifications') fetchNotifications();
-  }, [view, fetchGroups, fetchNotifications]);
 
   // Handlers
   const handleCreateGroup = async (e) => {
@@ -148,7 +89,7 @@ const Foro = () => {
   const handleJoinGroup = async (groupId) => {
     try {
       await api.post(`/forum/groups/${groupId}/join`);
-      setGroups(groups.map(group =>
+      setGroups(groups.map(group => 
         group.id === groupId ? { ...group, members: group.members + 1 } : group
       ));
     } catch (err) {
@@ -156,74 +97,31 @@ const Foro = () => {
     }
   };
 
-  const handleCreateDiscussion = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post(`/forum/groups/${selectedGroup.id}/discussions`, newDiscussion);
-      setNewDiscussion({ title: '', content: '' });
-      fetchDiscussions(selectedGroup.id);
-    } catch (err) {
-      setError(err.message || 'Error al crear discusión');
-    }
-  };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    if (!newMessage.trim()) return;
+
     try {
-      await api.post(`/forum/discussions/${selectedDiscussion.id}/messages`, {
+      await api.post(`/forum/groups/${selectedGroup.id}/messages`, {
         content: newMessage
       });
       setNewMessage('');
-      fetchMessages(selectedDiscussion.id);
+      fetchGroupMessages(selectedGroup.id);
     } catch (err) {
       setError(err.message || 'Error al enviar mensaje');
     }
   };
 
-  const handleUpdateMessage = async () => {
-    try {
-      await api.put(`/forum/messages/${editingMessage.id}`, {
-        content: editingMessage.content
-      });
-      setEditingMessage(null);
-      fetchMessages(selectedDiscussion.id);
-    } catch (err) {
-      setError(err.message || 'Error al actualizar mensaje');
-    }
-  };
+  // Efectos
+  useEffect(() => {
+    if (view === 'groups') fetchGroups();
+  }, [view, fetchGroups]);
 
-  const handleDeleteMessage = async (messageId) => {
-    if (window.confirm('¿Estás seguro de eliminar este mensaje?')) {
-      try {
-        await api.delete(`/forum/messages/${messageId}`);
-        fetchMessages(selectedDiscussion.id);
-      } catch (err) {
-        setError(err.message || 'Error al eliminar mensaje');
-      }
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchGroupMessages(selectedGroup.id);
     }
-  };
-
-  const markNotificationAsRead = async (notificationId) => {
-    try {
-      await api.put(`/forum/notifications/${notificationId}/read`);
-      fetchNotifications();
-    } catch (err) {
-      setError('Error al marcar notificación');
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      await Promise.all(
-        notifications
-          .filter(n => !n.is_read)
-          .map(n => api.put(`/forum/notifications/${n.id}/read`))
-      );
-      fetchNotifications();
-    } catch (err) {
-      setError('Error al marcar notificaciones');
-    }
-  };
+  }, [selectedGroup, fetchGroupMessages]);
 
   // Vistas
   const renderGroupsView = () => (
@@ -243,13 +141,12 @@ const Foro = () => {
       ) : (
         <div className={styles.groupsGrid}>
           {groups.map(group => (
-            <div
-              key={group.id}
+            <div 
+              key={group.id} 
               className={`${styles.groupCard} ${group.is_featured ? styles.featured : ''}`}
               onClick={() => {
                 setSelectedGroup(group);
-                fetchDiscussions(group.id);
-                setView('discussions');
+                setView('chat');
               }}
             >
               {group.is_featured && (
@@ -269,11 +166,11 @@ const Foro = () => {
                   <FaUsers /> {group.members} miembros
                 </div>
                 <div className={styles.statItem}>
-                  <FaComments /> {group.discussions} discusiones
+                  <FaComments /> {group.messages} mensajes
                 </div>
               </div>
               <div className={styles.groupFooter}>
-                <button
+                <button 
                   className={styles.joinButton}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -290,197 +187,53 @@ const Foro = () => {
     </div>
   );
 
-  const renderDiscussionsView = () => (
-    <div className={styles.discussionContainer}>
-      <button
+  const renderGroupChat = () => (
+    <div className={styles.groupChatContainer}>
+      <button 
         className={styles.backButton}
-        onClick={() => setView('groups')}
+        onClick={() => {
+          setSelectedGroup(null);
+          setView('groups');
+        }}
       >
         <FaArrowLeft /> Volver a grupos
       </button>
 
-      <div className={styles.discussionHeader}>
-        <h2>Discusiones en {selectedGroup?.name}</h2>
-        <button
-          className={styles.createButton}
-          onClick={() => {
-            setNewDiscussion({ title: '', content: '' });
-            setShowDiscussionModal(true); // Esta línea es crucial
-          }}
-        >
-          <FaPlus /> Nueva Discusión
-        </button>
-      </div>
+      <h2 className={styles.groupTitle}>
+        <MdGroups /> {selectedGroup?.name}
+      </h2>
+      <p className={styles.groupDescription}>{selectedGroup?.description}</p>
 
-      {showDiscussionModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
-            <button
-              className={styles.closeModal}
-              onClick={() => setShowDiscussionModal(false)}
-            >
-              &times;
-            </button>
-            <h2>Crear nueva discusión</h2>
-            <form onSubmit={(e) => {
-              handleCreateDiscussion(e);
-              setShowDiscussionModal(false);
-            }}>
-              <div className={styles.formGroup}>
-                <label>Título</label>
-                <input
-                  type="text"
-                  value={newDiscussion.title}
-                  onChange={(e) => setNewDiscussion({ ...newDiscussion, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Contenido</label>
-                <textarea
-                  value={newDiscussion.content}
-                  onChange={(e) => setNewDiscussion({ ...newDiscussion, content: e.target.value })}
-                  required
-                  rows="5"
-                />
-              </div>
-              <div className={styles.formActions}>
-                <button
-                  type="button"
-                  onClick={() => setShowDiscussionModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit">Crear</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {loading ? (
-        <div className={styles.loading}>Cargando discusiones...</div>
-      ) : discussions.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No hay discusiones en este grupo aún.</p>
-        </div>
-      ) : (
-        <div className={styles.discussionList}>
-          {discussions.map(discussion => (
-            <div
-              key={discussion.id}
-              className={styles.discussionItem}
-              onClick={() => {
-                setSelectedDiscussion(discussion);
-                fetchMessages(discussion.id);
-                setView('messages');
-              }}
-            >
-              <div className={styles.discussionInfo}>
-                <div className={styles.discussionTitle}>
-                  {discussion.title}
-                </div>
-                <p className={styles.discussionPreview}>
-                  {discussion.content.substring(0, 100)}...
-                </p>
-                <div className={styles.discussionMeta}>
-                  <span className={styles.discussionAuthor}>
-                    <FaUser /> {discussion.author_name}
-                  </span>
-                  <span className={styles.discussionDate}>
-                    {new Date(discussion.created_at).toLocaleDateString()}
-                  </span>
-                  <span className={styles.discussionComments}>
-                    <FaComments /> {discussion.message_count || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMessagesView = () => (
-    <div className={styles.messageContainer}>
-      <button
-        className={styles.backButton}
-        onClick={() => {
-          setSelectedDiscussion(null);
-          setView('discussions');
-        }}
-      >
-        <FaArrowLeft /> Volver a discusiones
-      </button>
-
-      <h2 className={styles.discussionTitle}>{selectedDiscussion?.title}</h2>
-
-      <div className={styles.messageList}>
+      <div className={styles.messagesContainer}>
         {loading ? (
           <div className={styles.loading}>Cargando mensajes...</div>
-        ) : messages.length === 0 ? (
+        ) : groupMessages.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>No hay mensajes en esta discusión aún.</p>
+            <p>No hay mensajes en este grupo aún. ¡Envía el primero!</p>
           </div>
         ) : (
-          messages.map(message => (
-            <div
-              key={message.id}
-              className={`${styles.messageItem} ${message.user_id === parseInt(localStorage.getItem('userId')) ? styles.ownMessage : ''}`}
+          groupMessages.map(message => (
+            <div 
+              key={message.id} 
+              className={`${styles.message} ${
+                message.user_id === parseInt(localStorage.getItem('userId')) 
+                  ? styles.ownMessage 
+                  : styles.otherMessage
+              }`}
             >
               <div className={styles.messageHeader}>
-                <div className={styles.messageAuthor}>
-                  <FaUser /> {message.author_name}
-                </div>
-                <div className={styles.messageDate}>
-                  {new Date(message.created_at).toLocaleString()}
-                </div>
+                <span className={styles.sender}>
+                  {message.user_id === parseInt(localStorage.getItem('userId'))
+                    ? 'Tú'
+                    : message.author_name}
+                </span>
+                <span className={styles.time}>
+                  {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
-
-              {editingMessage?.id === message.id ? (
-                <div className={styles.editForm}>
-                  <textarea
-                    value={editingMessage.content}
-                    onChange={(e) => setEditingMessage({
-                      ...editingMessage,
-                      content: e.target.value
-                    })}
-                  />
-                  <div className={styles.editActions}>
-                    <button onClick={() => setEditingMessage(null)}>
-                      Cancelar
-                    </button>
-                    <button onClick={handleUpdateMessage}>
-                      Guardar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.messageContent}>
-                  {message.content}
-                </div>
-              )}
-
-              {message.user_id === parseInt(localStorage.getItem('userId')) && !editingMessage && (
-                <div className={styles.messageActions}>
-                  <button
-                    onClick={() => setEditingMessage({
-                      id: message.id,
-                      content: message.content
-                    })}
-                    className={styles.editButton}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMessage(message.id)}
-                    className={styles.deleteButton}
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              )}
+              <div className={styles.messageContent}>
+                {message.content}
+              </div>
             </div>
           ))
         )}
@@ -490,87 +243,14 @@ const Foro = () => {
         <textarea
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Escribe tu mensaje..."
-          rows="3"
+          placeholder="Escribe un mensaje..."
+          rows="2"
           required
         />
         <button type="submit">
           <FaPaperPlane /> Enviar
         </button>
       </form>
-    </div>
-  );
-
-  const renderNotificationsView = () => (
-    <div className={styles.notificationsContainer}>
-      <button
-        className={styles.backButton}
-        onClick={() => setView('groups')}
-      >
-        <FaArrowLeft /> Volver al foro
-      </button>
-
-      <div className={styles.notificationsHeader}>
-        <h2>
-          <FaBell /> Notificaciones
-        </h2>
-        <div className={styles.notificationsActions}>
-          <button
-            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-            className={styles.toggleButton}
-          >
-            {showUnreadOnly ? <FaBellSlash /> : <FaBell />}
-            {showUnreadOnly ? 'Mostrar todas' : 'Mostrar no leídas'}
-          </button>
-          {notifications.some(n => !n.is_read) && (
-            <button
-              onClick={markAllAsRead}
-              className={styles.markAllButton}
-            >
-              <FaCheck /> Marcar todas como leídas
-            </button>
-          )}
-        </div>
-      </div>
-
-      {loading ? (
-        <div className={styles.loading}>Cargando notificaciones...</div>
-      ) : notifications.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No hay notificaciones {showUnreadOnly ? 'no leídas' : ''}.</p>
-        </div>
-      ) : (
-        <div className={styles.notificationsList}>
-          {notifications.map(notification => (
-            <div
-              key={notification.id}
-              className={`${styles.notificationItem} ${!notification.is_read ? styles.unread : ''}`}
-            >
-              <div
-                className={styles.notificationContent}
-                onClick={() => !notification.is_read && markNotificationAsRead(notification.id)}
-              >
-                {notification.content}
-                <span className={styles.notificationDate}>
-                  {new Date(notification.created_at).toLocaleString()}
-                </span>
-              </div>
-              {!notification.is_read && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markNotificationAsRead(notification.id);
-                  }}
-                  className={styles.markAsReadButton}
-                  title="Marcar como leída"
-                >
-                  <FaTimes />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 
@@ -584,18 +264,6 @@ const Foro = () => {
         <p className={styles.subtitle}>
           Conectando estudiantes interesados en la cultura maya
         </p>
-
-        {view !== 'notifications' && (
-          <button
-            className={styles.notificationsButton}
-            onClick={() => {
-              setView('notifications');
-              fetchNotifications();
-            }}
-          >
-            <FaBell /> Notificaciones
-          </button>
-        )}
       </header>
 
       <div className={styles.mainContent}>
@@ -605,19 +273,19 @@ const Foro = () => {
               <div className={styles.sidebarSection}>
                 <h3 className={styles.sidebarTitle}>Menú</h3>
                 <ul className={styles.menuList}>
-                  <li
+                  <li 
                     className={`${styles.menuItem} ${activeTab === 'grupos' ? styles.active : ''}`}
                     onClick={() => setActiveTab('grupos')}
                   >
                     <MdGroups /> Grupos
                   </li>
-                  <li
+                  <li 
                     className={`${styles.menuItem} ${activeTab === 'nuevos' ? styles.active : ''}`}
                     onClick={() => setActiveTab('nuevos')}
                   >
                     <MdNewReleases /> Nuevos
                   </li>
-                  <li
+                  <li 
                     className={`${styles.menuItem} ${activeTab === 'populares' ? styles.active : ''}`}
                     onClick={() => setActiveTab('populares')}
                   >
@@ -630,8 +298,8 @@ const Foro = () => {
                 <h3 className={styles.sidebarTitle}>Universidades</h3>
                 <ul className={styles.universityList}>
                   {universities.map((uni, index) => (
-                    <li
-                      key={index}
+                    <li 
+                      key={index} 
                       className={styles.universityItem}
                       onClick={() => setSearchQuery(uni)}
                     >
@@ -654,7 +322,7 @@ const Foro = () => {
                     className={styles.searchInput}
                   />
                 </div>
-                <button
+                <button 
                   className={styles.createButton}
                   onClick={() => setShowCreateModal(true)}
                 >
@@ -669,16 +337,14 @@ const Foro = () => {
           </>
         )}
 
-        {view === 'discussions' && renderDiscussionsView()}
-        {view === 'messages' && renderMessagesView()}
-        {view === 'notifications' && renderNotificationsView()}
+        {view === 'chat' && renderGroupChat()}
       </div>
 
       {/* Modal para crear nuevo grupo */}
       {showCreateModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <button
+            <button 
               className={styles.closeModal}
               onClick={() => setShowCreateModal(false)}
             >
@@ -692,7 +358,7 @@ const Foro = () => {
                   type="text"
                   id="groupName"
                   value={newGroup.name}
-                  onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
+                  onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
                   required
                   placeholder="Ej: Estudios Mayas UNAM"
                 />
@@ -702,7 +368,7 @@ const Foro = () => {
                 <select
                   id="university"
                   value={newGroup.university}
-                  onChange={(e) => setNewGroup({ ...newGroup, university: e.target.value })}
+                  onChange={(e) => setNewGroup({...newGroup, university: e.target.value})}
                   required
                 >
                   <option value="">Selecciona una universidad</option>
@@ -716,7 +382,7 @@ const Foro = () => {
                 <textarea
                   id="description"
                   value={newGroup.description}
-                  onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
+                  onChange={(e) => setNewGroup({...newGroup, description: e.target.value})}
                   required
                   placeholder="Describe el propósito de este grupo..."
                   rows="4"
@@ -727,22 +393,22 @@ const Foro = () => {
                   <input
                     type="checkbox"
                     checked={newGroup.isPublic}
-                    onChange={(e) => setNewGroup({ ...newGroup, isPublic: e.target.checked })}
+                    onChange={(e) => setNewGroup({...newGroup, isPublic: e.target.checked})}
                   />
                   <span className={styles.checkboxCustom}></span>
                   Grupo público (cualquiera puede unirse)
                 </label>
               </div>
               <div className={styles.formActions}>
-                <button
-                  type="button"
+                <button 
+                  type="button" 
                   className={styles.cancelButton}
                   onClick={() => setShowCreateModal(false)}
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
+                <button 
+                  type="submit" 
                   className={styles.submitButton}
                 >
                   Crear grupo

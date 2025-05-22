@@ -63,14 +63,6 @@ class Group {
     );
     return rows[0].count;
   }
-
-  static async getDiscussionsCount(groupId) {
-    const [rows] = await pool.execute(
-      'SELECT COUNT(*) as count FROM discussions WHERE group_id = ?',
-      [groupId]
-    );
-    return rows[0].count;
-  }
 }
 
 export default Group;
