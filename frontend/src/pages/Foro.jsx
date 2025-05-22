@@ -6,6 +6,8 @@ import {
 import { MdGroups, MdNewReleases, MdTrendingUp } from 'react-icons/md';
 import api from '../api/api';
 import styles from '../styles/Foro.module.css';
+import socket from '../socket';
+
 
 const Foro = () => {
   const [activeTab, setActiveTab] = useState('grupos');
@@ -31,6 +33,30 @@ const Foro = () => {
     'UNAM', 'UADY', 'Universidad Autónoma de Campeche',
     'Universidad de Quintana Roo', 'Universidad Autónoma de Chiapas'
   ];
+
+
+// Dentro de tu componente Foro:
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    socket.auth = { token };
+    socket.connect();
+  }
+
+  socket.on('messageReceived', (newMessage) => {
+    setGroupMessages(prev => [...prev, newMessage]);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('Error de conexión Socket.io:', err);
+  });
+
+  return () => {
+    socket.off('messageReceived');
+    socket.off('connect_error');
+    socket.disconnect();
+  };
+}, []);
 
   const fetchGroups = useCallback(async () => {
   setLoading(true);
@@ -108,6 +134,37 @@ const Foro = () => {
     setLoading(false);
   }
 }, []);
+
+const handleCreateGroup = async (e) => {
+  e.preventDefault();
+  try {
+    // Asegúrate de que newGroup tenga los campos correctos
+    const groupToCreate = {
+      name: newGroup.name,
+      description: newGroup.description,
+      university: newGroup.university,
+      is_public: newGroup.isPublic ? 1 : 0, // Asegúrate que coincida con tu API
+      created_by: parseInt(localStorage.getItem('userId')) // Asumiendo que guardas el ID así
+    };
+
+    const response = await api.post('/forum/groups', groupToCreate);
+    console.log('Grupo creado:', response);
+
+    setShowCreateModal(false);
+    setNewGroup({
+      name: '',
+      university: '',
+      description: '',
+      isPublic: true
+    });
+    
+    // Recargar los grupos
+    fetchGroups();
+  } catch (err) {
+    setError(err.response?.data?.message || 'Error al crear el grupo');
+    console.error('Error al crear grupo:', err);
+  }
+};
 
   // Función para unirse a grupo
   const handleJoinGroup = async (groupId) => {

@@ -120,3 +120,29 @@ export const sendGroupMessage = async (req, res) => {
     res.status(500).json({ message: 'Error al enviar mensaje' });
   }
 };
+
+// Añade esta función para guardar mensajes
+export const saveMessageToDatabase = async (messageData) => {
+  const { groupId, content, userId } = messageData;
+  
+  // 1. Guardar el mensaje en la base de datos
+  const [result] = await pool.execute(
+    'INSERT INTO group_messages (group_id, user_id, content) VALUES (?, ?, ?)',
+    [groupId, userId, content]
+  );
+
+  // 2. Obtener el mensaje completo con información del autor
+  const [messages] = await pool.execute(
+    `SELECT gm.*, u.name as author_name 
+     FROM group_messages gm
+     JOIN users u ON gm.user_id = u.id
+     WHERE gm.id = ?`,
+    [result.insertId]
+  );
+
+  if (messages.length === 0) {
+    throw new Error('No se pudo recuperar el mensaje recién creado');
+  }
+
+  return messages[0];
+};
