@@ -6,6 +6,7 @@ import fs from 'fs';
 import authRoutes from './routes/authRoutes.js';
 import { authenticate } from './middlewares/auth.js';
 import markerRoutes from './routes/markerRoutes.js';
+import forumRoutes from './routes/forumRoutes.js';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/uploads', (req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
 app.use('/api/profile', authRoutes);
+app.use('/api/forum', forumRoutes);
 
 // Ruta protegida
 app.get('/api/protected', authenticate, (req, res) => {
