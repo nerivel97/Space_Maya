@@ -66,13 +66,23 @@ const FloatingChat = () => {
   // Configurar Socket.io - Manejador de mensajes
   useEffect(() => {
     const handleMessageReceived = (newMessage) => {
-      // Reemplazar mensaje optimista si existe
       setMessages(prev => {
-        const filtered = prev.filter(msg =>
-          !msg.isOptimistic ||
-          (msg.isOptimistic && msg.user_id !== newMessage.user_id)
+        // Buscar mensaje optimista para reemplazar
+        const existingIndex = prev.findIndex(msg => 
+          msg.isOptimistic && 
+          msg.user_id === newMessage.user_id &&
+          msg.content === newMessage.content &&
+          Math.abs(new Date(msg.created_at) - new Date(newMessage.created_at)) < 5000
         );
-        return [...filtered, newMessage];
+
+        if (existingIndex !== -1) {
+          const updatedMessages = [...prev];
+          updatedMessages[existingIndex] = newMessage;
+          return updatedMessages;
+        }
+
+        // Si no es un reemplazo, agregar al final
+        return [...prev, newMessage];
       });
 
       // Actualizar lista de grupos
@@ -96,9 +106,22 @@ const FloatingChat = () => {
       }
     };
 
-      api.socket.on('messageReceived', handleMessageReceived);
-  return () => api.socket.off('messageReceived', handleMessageReceived);
-}, [activeGroup]);
+    const handleMessageError = (errorData) => {
+      // Eliminar mensaje optimista que falló
+      setMessages(prev => prev.filter(msg => 
+        !(msg.isOptimistic && msg.id === errorData.tempId)
+      ));
+      setError('Error al enviar mensaje');
+    };
+
+    api.socket.on('messageReceived', handleMessageReceived);
+    api.socket.on('messageError', handleMessageError);
+
+    return () => {
+      api.socket.off('messageReceived', handleMessageReceived);
+      api.socket.off('messageError', handleMessageError);
+    };
+  }, [activeGroup]);
 
   // Inicializar chat
   useEffect(() => {
@@ -174,18 +197,15 @@ const FloatingChat = () => {
       setIsLoading(prev => ({ ...prev, sending: true }));
       setError(null);
 
+      const userId = parseInt(localStorage.getItem('userId'));
+      const tempId = `${Date.now()}-${userId}`; // ID único temporal
       const messageData = {
         groupId: activeGroup.id,
-        content: newMessage.trim()
+        content: newMessage.trim(),
+        tempId // Enviar ID temporal al servidor
       };
 
-      // Enviar mensaje a través de Socket.io
-      api.sendMessage(messageData);
-
       // Actualización optimista
-      const tempId = Date.now();
-      const userId = parseInt(localStorage.getItem('userId'));
-
       setMessages(prev => [...prev, {
         id: tempId,
         group_id: activeGroup.id,
@@ -196,6 +216,8 @@ const FloatingChat = () => {
         isOptimistic: true
       }]);
 
+      // Enviar mensaje a través de Socket.io
+      api.sendMessage(messageData);
       setNewMessage('');
     } catch (err) {
       console.error('Error sending message:', err);
