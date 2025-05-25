@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { FiHome, FiMap, FiUsers, FiSettings, FiPieChart } from 'react-icons/fi';
+import { FaBookTanakh } from "react-icons/fa6";
 import styles from '../../styles/admin/sidebar.module.css';
 
 const AdminSidebar = () => {
@@ -33,6 +34,17 @@ const AdminSidebar = () => {
             >
               <FiMap className={styles.icon} />
               <span>Mapa Interactivo</span>
+            </NavLink>
+          </li>
+          <li className={styles.navItem}>
+            <NavLink 
+              to="/admin/mitos-leyendas-panel" 
+              className={({ isActive }) => 
+                `${styles.link} ${isActive ? styles.activeLink : ''}`
+              }
+            >
+              <FaBookTanakh className={styles.icon} />
+              <span>Mitos y Leyendas</span>
             </NavLink>
           </li>
           <li className={styles.navItem}>

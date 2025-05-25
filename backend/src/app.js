@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes.js';
 import markerRoutes from './routes/markerRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
+import mythRoutes from './routes/mythRoutes.js'; // <-- Nueva importación
 import { authenticate } from './middlewares/auth.js';
 import { saveMessageToDatabase } from './controllers/forumController.js';
 import jwt from 'jsonwebtoken';
@@ -98,7 +99,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Middleware para parsear JSON y URL encoded
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware para archivos estáticos
 app.use('/uploads', express.static(path.join(path.resolve(), 'public', 'uploads'), {
@@ -114,6 +117,7 @@ app.use('/uploads', express.static(path.join(path.resolve(), 'public', 'uploads'
 app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/myths', mythRoutes); // <-- Nueva ruta agregada
 
 // Ruta protegida de ejemplo
 app.get('/api/protected', authenticate, (req, res) => {
@@ -123,7 +127,20 @@ app.get('/api/protected', authenticate, (req, res) => {
 // Manejador de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Algo salió mal!' });
+  
+  // Manejar errores de Multer (límite de tamaño de archivo)
+  if (err instanceof multer.MulterError) {
+    return res.status(413).json({ 
+      success: false,
+      message: 'El archivo es demasiado grande (máximo 5MB)'
+    });
+  }
+  
+  // Manejar otros errores
+  res.status(500).json({ 
+    success: false,
+    message: 'Algo salió mal!' 
+  });
 });
 
 const PORT = process.env.PORT || 5000;

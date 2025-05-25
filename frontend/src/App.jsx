@@ -6,8 +6,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Mapa';
-import Mitos from './pages/Mitos';
-import Leyendas from './pages/Leyendas';
+import MythForm from './pages/admin/MythLegend/MythForm';
+
 import Foro from './pages/Foro';
 import Perfil from './pages/Perfil';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -36,17 +36,7 @@ function App() {
               </PrivateRoute>
             } />
             
-            <Route path="/mitos" element={
-              <PrivateRoute>
-                <Mitos />
-              </PrivateRoute>
-            } />
             
-            <Route path="/leyendas" element={
-              <PrivateRoute>
-                <Leyendas />
-              </PrivateRoute>
-            } />
 
             <Route path="/aprende/foro" element={
               <PrivateRoute>
@@ -63,6 +53,12 @@ function App() {
             <Route path="/admin/map-panel" element={
               <AdminRoute>
                 <AdminMapPanel />
+              </AdminRoute>
+            } />
+
+            <Route path="/admin/mitos-leyendas-panel" element={
+              <AdminRoute>
+                <MythForm />
               </AdminRoute>
             } />
           </Route>

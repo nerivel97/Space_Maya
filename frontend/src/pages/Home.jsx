@@ -63,7 +63,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Mitos</h3>
               <p className={styles.cardText}>Amplía tu conocimiento y conoce los mitos mas conocidos de la region.</p>
-              <Link to="/mitos" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
             
             <div className={styles.featureCard}>
@@ -72,7 +72,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Leyendas</h3>
               <p className={styles.cardText}>Descubre las leyendas mas conocidas de la region maya.</p>
-              <Link to="/leyendas" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/mitos_leyendas" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
             
             <div className={styles.featureCard}>

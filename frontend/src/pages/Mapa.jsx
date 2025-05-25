@@ -18,7 +18,6 @@ const setupLeafletIcons = () => {
       iconSize: [25, 41],
       iconAnchor: [12, 41],
       popupAnchor: [1, -34],
-      shadowSize: [41, 41]
     });
   } catch (error) {
     console.error('Error configuring Leaflet icons:', error);
@@ -95,7 +94,7 @@ const Mapa = () => {
                   </div>
                 </div>
               `,
-              iconSize: [40, 40]
+              iconSize: [30, 30]
             })
           }).addTo(mapInstance.current);
 

@@ -1,0 +1,79 @@
+.tagSelector {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  min-height: 44px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  position: relative;
+  background-color: white;
+}
+
+.tagItem {
+  background-color: #e0f7fa;
+  color: #00838f;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tagInput {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.tagRemoveButton {
+  background: none;
+  border: none;
+  color: #00838f;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.tagDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 0.3rem;
+}
+
+.tagDropdownItem {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tagDropdownItem:hover {
+  background-color: #f5f5f5;
+}
+
+/* Estilos para móviles */
+@media (max-width: 768px) {
+  .tagSelector {
+    min-height: 50px;
+  }
+  
+  .tagInput {
+    min-width: 100px;
+  }
+}
