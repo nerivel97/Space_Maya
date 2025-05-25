@@ -1,266 +1,148 @@
-import Myth from '../models/Myth.js';
+import MythModel from '../models/Myths.js';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
-export const getAllMyths = async (req, res) => {
-  try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search, 
-      category, 
-      region, 
-      culture
-    } = req.query;
-    
-    const result = await Myth.findAll({
-      page: parseInt(page),
-      limit: parseInt(limit),
-      search,
-      category,
-      region,
-      culture
-    });
-    
-    res.json({
-      success: true,
-      data: result.data,
-      pagination: result.pagination
-    });
-  } catch (error) {
-    console.error('Error fetching myths:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener los mitos y leyendas'
-    });
-  }
-};
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const getMythById = async (req, res) => {
-  try {
-    const myth = await Myth.findById(req.params.id);
-    
-    if (!myth) {
-      return res.status(404).json({
-        success: false,
-        message: 'Mito o leyenda no encontrado'
-      });
+// Configuración de Multer para guardar imágenes
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../../public/uploads/myths');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
-    res.json({
-      success: true,
-      data: myth
-    });
-  } catch (error) {
-    console.error('Error fetching myth by ID:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener el mito o leyenda'
-    });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'myth-' + uniqueSuffix + ext);
   }
-};
+});
 
-export const uploadMythImage = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'No se ha subido ninguna imagen' 
-      });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de archivo no permitido. Solo se permiten JPEG, PNG y GIF.'), false);
     }
-
-    const imageUrl = `/uploads/myths/${req.file.filename}`;
-    
-    res.status(201).json({
-      success: true,
-      imageUrl,
-      filename: req.file.filename
-    });
-  } catch (error) {
-    console.error('Error uploading myth image:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al subir imagen del mito'
-    });
   }
-};
+}).single('image');
 
-export const createMyth = async (req, res) => {
-  try {
-    // Obtener datos del FormData
-    let mythData;
+const MythController = {
+  async getAll(req, res) {
     try {
-      mythData = JSON.parse(req.body.data);
+      const myths = await MythModel.getAll();
+      res.json({ success: true, data: myths });
     } catch (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'Formato de datos inválido'
-      });
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al obtener mitos y leyendas' });
     }
+  },
 
-    // Procesar imágenes subidas
-    const featuredImage = req.files['featured_image']?.[0];
-    const additionalImages = req.files['additional_images'] || [];
-    
-    const images = [];
-    let featuredImagePath = mythData.featured_image || '';
-    
-    // Si se subió una nueva imagen destacada
-    if (featuredImage) {
-      const uploadDir = path.join(__dirname, '../../public/uploads/myths');
-      const filename = `myth-${Date.now()}-${featuredImage.originalname}`;
-      const filePath = path.join(uploadDir, filename);
+  async getById(req, res) {
+    try {
+      const myth = await MythModel.getById(req.params.id);
+      if (!myth) {
+        return res.status(404).json({ success: false, message: 'Mito/Leyenda no encontrado' });
+      }
+      res.json({ success: true, data: myth });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al obtener el mito/leyenda' });
+    }
+  },
+
+  async create(req, res) {
+    try {
+      const { user } = req;
+      const mythData = {
+        ...req.body,
+        created_by: user.id
+      };
       
-      await fs.promises.rename(featuredImage.path, filePath);
-      featuredImagePath = `/uploads/myths/${filename}`;
-      
-      images.push({
-        image_url: featuredImagePath,
-        caption: featuredImage.originalname,
-        is_primary: true
-      });
+      const newMyth = await MythModel.create(mythData);
+      res.status(201).json({ success: true, data: newMyth });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al crear mito/leyenda' });
     }
-    
-    // Procesar imágenes adicionales
-    for (const img of additionalImages) {
-      const filename = `myth-${Date.now()}-${img.originalname}`;
-      const filePath = path.join(uploadDir, filename);
-      
-      await fs.promises.rename(img.path, filePath);
-      
-      images.push({
-        image_url: `/uploads/myths/${filename}`,
-        caption: img.originalname,
-        is_primary: false
-      });
-    }
+  },
 
-    // Crear el mito en la base de datos
-    const mythId = await Myth.create({
-      ...mythData,
-      featured_image: featuredImagePath,
-      images,
-      created_by: req.user.userId
-    });
-    
-    res.status(201).json({
-      success: true,
-      message: 'Mito creado exitosamente',
-      data: { id: mythId }
-    });
-  } catch (error) {
-    console.error('Error creating myth:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear el mito'
-    });
-  }
-};
-
-export const updateMyth = async (req, res) => {
-  try {
-    // Validación básica de campos requeridos
-    if (!req.body.title || !req.body.content || !req.body.origin_region || !req.body.origin_culture) {
-      return res.status(400).json({
-        success: false,
-        message: 'Por favor complete todos los campos requeridos'
-      });
+  async update(req, res) {
+    try {
+      const updatedMyth = await MythModel.update(req.params.id, req.body);
+      res.json({ success: true, data: updatedMyth });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al actualizar mito/leyenda' });
     }
-    
-    // Procesar imágenes subidas
-    const featuredImage = req.files['featured_image']?.[0];
-    const additionalImages = req.files['additional_images'] || [];
-    
-    const images = [];
-    let featuredImageUrl = req.body.featured_image;
-    
-    if (featuredImage) {
-      featuredImageUrl = `/uploads/myths/${featuredImage.filename}`;
-      images.push({
-        image_url: featuredImageUrl,
-        caption: featuredImage.originalname,
-        is_primary: true
-      });
-    }
-    
-    additionalImages.forEach(img => {
-      images.push({
-        image_url: `/uploads/myths/${img.filename}`,
-        caption: img.originalname,
-        is_primary: false
-      });
-    });
-    
-    // Actualizar el mito en la base de datos
-    await Myth.update(req.params.id, {
-      title: req.body.title,
-      content: req.body.content,
-      origin_region: req.body.origin_region,
-      origin_culture: req.body.origin_culture,
-      category: req.body.category,
-      estimated_origin_year: req.body.estimated_origin_year,
-      is_verified: req.body.is_verified === 'true',
-      featured_image: featuredImageUrl,
-      images,
-      deleted_images: req.body.deleted_images ? JSON.parse(req.body.deleted_images) : []
-    });
-    
-    res.json({
-      success: true,
-      message: 'Mito actualizado exitosamente'
-    });
-  } catch (error) {
-    console.error('Error updating myth:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar el mito'
-    });
-  }
-};
+  },
 
-export const deleteMyth = async (req, res) => {
-  try {
-    const deleted = await Myth.delete(req.params.id);
-    
-    if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: 'Mito no encontrado'
-      });
+  async delete(req, res) {
+    try {
+      const deleted = await MythModel.delete(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: 'Mito/Leyenda no encontrado' });
+      }
+      res.json({ success: true, message: 'Mito/Leyenda eliminado correctamente' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al eliminar mito/leyenda' });
     }
-    
-    res.json({
-      success: true,
-      message: 'Mito eliminado exitosamente'
-    });
-  } catch (error) {
-    console.error('Error deleting myth:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar el mito'
-    });
-  }
-};
+  },
 
-export const getMetadata = async (req, res) => {
-  try {
-    const [categories, regions, cultures] = await Promise.all([
-      Myth.getCategories(),
-      Myth.getRegions(),
-      Myth.getCultures()
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        categories,
-        regions,
-        cultures
+  async uploadImage(req, res) {
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ 
+          success: false, 
+          message: err.message || 'Error al subir la imagen' 
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No se proporcionó ninguna imagen' 
+        });
+      }
+
+      try {
+        const imagePath = `/uploads/myths/${req.file.filename}`;
+        res.json({ 
+          success: true, 
+          data: { 
+            imageUrl: imagePath,
+            filename: req.file.filename
+          } 
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ 
+          success: false, 
+          message: 'Error al procesar la imagen' 
+        });
       }
     });
-  } catch (error) {
-    console.error('Error fetching metadata:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener los metadatos'
-    });
+  },
+
+  async verifyMyth(req, res) {
+    try {
+      const { is_verified } = req.body;
+      const verifiedMyth = await MythModel.verifyMyth(req.params.id, is_verified);
+      res.json({ success: true, data: verifiedMyth });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: 'Error al verificar mito/leyenda' });
+    }
   }
 };
+
+export default MythController;

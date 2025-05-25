@@ -90,13 +90,18 @@ const apiService = {
   publicPost: (url, data, config = {}) => api.post(url, data, { ...config, publicRoute: true }),
   
   // Métodos para archivos
-  uploadImage: (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    return api.post('/markers/upload-image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
+  uploadImage: (file, isMyth = false) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  const endpoint = isMyth ? '/myths/upload-image' : '/markers/upload-image';
+  
+  return api.post(endpoint, formData, {
+    headers: { 
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${localStorage.getItem('token')}` // Asegura autenticación
+    }
+  });
+},
   
   // Métodos para Socket.io
   socket,

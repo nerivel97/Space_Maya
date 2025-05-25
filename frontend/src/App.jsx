@@ -6,7 +6,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Mapa';
-import MythForm from './pages/admin/MythLegend/MythForm';
+import MythsPanel from './pages/admin/MythLegend/MythsPanel';
 
 import Foro from './pages/Foro';
 import Perfil from './pages/Perfil';
@@ -58,7 +58,7 @@ function App() {
 
             <Route path="/admin/mitos-leyendas-panel" element={
               <AdminRoute>
-                <MythForm />
+                <MythsPanel />
               </AdminRoute>
             } />
           </Route>

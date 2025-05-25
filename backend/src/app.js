@@ -6,8 +6,8 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/authRoutes.js';
 import markerRoutes from './routes/markerRoutes.js';
+import mythRoutes from './routes/mythRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
-import mythRoutes from './routes/mythRoutes.js'; // <-- Nueva importación
 import { authenticate } from './middlewares/auth.js';
 import { saveMessageToDatabase } from './controllers/forumController.js';
 import jwt from 'jsonwebtoken';
@@ -117,7 +117,7 @@ app.use('/uploads', express.static(path.join(path.resolve(), 'public', 'uploads'
 app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
 app.use('/api/forum', forumRoutes);
-app.use('/api/myths', mythRoutes); // <-- Nueva ruta agregada
+app.use('/api/myths', mythRoutes);
 
 // Ruta protegida de ejemplo
 app.get('/api/protected', authenticate, (req, res) => {
