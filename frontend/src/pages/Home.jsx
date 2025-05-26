@@ -28,7 +28,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Vocabulario</h3>
               <p className={styles.cardText}>Amplía tu conocimiento con nuestro extenso diccionario visual y auditivo Maya-Español.</p>
-              <Link to="/vocabulario" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/herramientas/vocabulario" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
             
             <div className={styles.featureCard}>
@@ -46,7 +46,7 @@ const Home = () => {
               </div>
               <h3 className={styles.cardTitle}>Juego Educativo</h3>
               <p className={styles.cardText}>Aprende divirtiéndote con nuestro juego interactivo que refuerza tu aprendizaje.</p>
-              <Link to="/juegos" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/herramientas/memorama" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
           </div>
         </div>
@@ -61,7 +61,7 @@ const Home = () => {
               <div className={styles.cardIcon}>
                 <FaBookTanakh />
               </div>
-              <h3 className={styles.cardTitle}>Mitos</h3>
+              <h3 className={styles.cardTitle}>.....</h3>
               <p className={styles.cardText}>Amplía tu conocimiento y conoce los mitos mas conocidos de la region.</p>
               <Link to="/" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
@@ -70,9 +70,9 @@ const Home = () => {
               <div className={styles.cardIcon}>
                 <FaBookQuran />
               </div>
-              <h3 className={styles.cardTitle}>Leyendas</h3>
+              <h3 className={styles.cardTitle}>Mitos y Leyendas</h3>
               <p className={styles.cardText}>Descubre las leyendas mas conocidas de la region maya.</p>
-              <Link to="/mitos_leyendas" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
+              <Link to="/aprende/mitos-leyendas" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
             </div>
             
             <div className={styles.featureCard}>

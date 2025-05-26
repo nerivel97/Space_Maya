@@ -11,26 +11,38 @@ const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
+    const handleLogout = () => {
+      localStorage.removeItem('token');
+      setCurrentUser(null);
+      setIsAdmin(false);
+      setAuthError(null);
+    };
+
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
           const decoded = jwtDecode(token);
-          setCurrentUser({ id: decoded.userId, email: decoded.email });
-          setIsAdmin(decoded.isAdmin || false);
-          
-          // Verificación adicional con el backend
+
+          // Establecer usuario básico desde el token
+          setCurrentUser({
+            id: decoded.userId,
+            email: decoded.email,
+            isAdmin: decoded.isAdmin || false
+          });
+
+          // Verificación opcional con el backend
           try {
-            const adminStatus = await api.get('/auth/verify-admin');
-            setIsAdmin(adminStatus.isAdmin || false);
+            const { data } = await api.get('/auth/verify-admin');
+            setIsAdmin(data.isAdmin || false);
           } catch (error) {
-            console.error('Admin verification error:', error);
-            setIsAdmin(false);
+            console.error('Admin verification warning:', error);
+            // Si falla, mantener el estado del token
+            setIsAdmin(decoded.isAdmin || false);
           }
         } catch (error) {
           console.error('Token verification error:', error);
-          localStorage.removeItem('token');
-          setAuthError('La sesión ha expirado');
+          handleLogout();
         }
       }
       setLoading(false);
@@ -40,81 +52,81 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-  try {
-    // Crear una instancia temporal de axios sin interceptores para el login
-    const authApi = axios.create({
-      baseURL: 'http://localhost:5000/api',
-      timeout: 10000
-    });
+    try {
+      // Crear una instancia temporal de axios sin interceptores para el login
+      const authApi = axios.create({
+        baseURL: 'http://localhost:5000/api',
+        timeout: 10000
+      });
 
-    const response = await authApi.post('/auth/login', { email, password });
-    
-    if (!response.data.token) {
-      throw new Error('No se recibió token de autenticación');
-    }
+      const response = await authApi.post('/auth/login', { email, password });
 
-    localStorage.setItem('token', response.data.token);
-    const decoded = jwtDecode(response.data.token);
-    
-    setCurrentUser({ 
-      id: decoded.userId, 
-      email: decoded.email 
-    });
-    setIsAdmin(decoded.isAdmin || false);
-    
-    return true;
-  } catch (error) {
-    console.error('Login error:', error);
-    let errorMessage = 'Credenciales incorrectas';
-    
-    if (error.response) {
-      // Manejar errores específicos del backend
-      errorMessage = error.response.data.message || errorMessage;
-    } else if (error.message) {
-      errorMessage = error.message;
+      if (!response.data.token) {
+        throw new Error('No se recibió token de autenticación');
+      }
+
+      localStorage.setItem('token', response.data.token);
+      const decoded = jwtDecode(response.data.token);
+
+      setCurrentUser({
+        id: decoded.userId,
+        email: decoded.email
+      });
+      setIsAdmin(decoded.isAdmin || false);
+
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      let errorMessage = 'Credenciales incorrectas';
+
+      if (error.response) {
+        // Manejar errores específicos del backend
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      throw new Error(errorMessage);
     }
-    
-    throw new Error(errorMessage);
-  }
-};
+  };
 
   const register = async (email, password, profile = {}) => {
-  try {
-    const authApi = axios.create({
-      baseURL: 'http://localhost:5000/api',
-      timeout: 10000
-    });
+    try {
+      const authApi = axios.create({
+        baseURL: 'http://localhost:5000/api',
+        timeout: 10000
+      });
 
-    const response = await authApi.post('/auth/register', { 
-      email, 
-      password,
-      profile 
-    });
-    
-    if (!response.data.token) {
-      throw new Error('No se recibió token de autenticación');
-    }
+      const response = await authApi.post('/auth/register', {
+        email,
+        password,
+        profile
+      });
 
-    localStorage.setItem('token', response.data.token);
-    const decoded = jwtDecode(response.data.token);
-    
-    setCurrentUser({ 
-      id: decoded.userId,
-      email: decoded.email,
-      profile: {
-        name: profile.name,
-        lastname: profile.lastname,
-        avatar: profile.avatar
+      if (!response.data.token) {
+        throw new Error('No se recibió token de autenticación');
       }
-    });
-    setIsAdmin(decoded.isAdmin || false);
-    
-    return true;
-  } catch (error) {
-    console.error('Register error:', error);
-    throw new Error(error.response?.data?.message || error.message || 'Error en el registro');
-  }
-};
+
+      localStorage.setItem('token', response.data.token);
+      const decoded = jwtDecode(response.data.token);
+
+      setCurrentUser({
+        id: decoded.userId,
+        email: decoded.email,
+        profile: {
+          name: profile.name,
+          lastname: profile.lastname,
+          avatar: profile.avatar
+        }
+      });
+      setIsAdmin(decoded.isAdmin || false);
+
+      return true;
+    } catch (error) {
+      console.error('Register error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Error en el registro');
+    }
+  };
 
   const logout = () => {
     localStorage.removeItem('token');

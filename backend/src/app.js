@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import markerRoutes from './routes/markerRoutes.js';
 import mythRoutes from './routes/mythRoutes.js';
 import forumRoutes from './routes/forumRoutes.js';
+import vocabularioRoutes from './routes/vocabularioRoutes.js';
 import { authenticate } from './middlewares/auth.js';
 import { saveMessageToDatabase } from './controllers/forumController.js';
 import jwt from 'jsonwebtoken';
@@ -118,6 +119,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/markers', markerRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/myths', mythRoutes);
+app.use('/api/vocabulario', vocabularioRoutes);
 
 // Ruta protegida de ejemplo
 app.get('/api/protected', authenticate, (req, res) => {

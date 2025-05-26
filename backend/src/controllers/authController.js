@@ -5,9 +5,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const generateToken = (userId, isAdmin) => {
+const generateToken = (userId, email, isAdmin) => {
   return jwt.sign(
-    { userId, isAdmin },
+    { userId, email, isAdmin },
     process.env.JWT_SECRET,
     { expiresIn: '1d' }
   );
@@ -34,7 +34,7 @@ export const register = async (req, res) => {
       profile: profile || {}
     });
 
-    const token = generateToken(userId, false);
+    const token = generateToken(userId, email, false);
     res.status(201).json({ userId, token });
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar usuario' });
@@ -94,7 +94,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
-    const token = generateToken(user.id, user.isAdmin);
+    const token = generateToken(user.id, user.email, user.isAdmin);
     res.json({ 
       userId: user.id, 
       token,

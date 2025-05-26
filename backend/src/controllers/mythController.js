@@ -1,4 +1,4 @@
-import MythModel from '../models/Myths.js';
+import Myths from '../models/Myths.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,7 +38,7 @@ const upload = multer({
 const MythController = {
   async getAll(req, res) {
     try {
-      const myths = await MythModel.getAll();
+      const myths = await Myths.getAll();
       res.json({ success: true, data: myths });
     } catch (error) {
       console.error(error);
@@ -48,7 +48,7 @@ const MythController = {
 
   async getById(req, res) {
     try {
-      const myth = await MythModel.getById(req.params.id);
+      const myth = await Myths.getById(req.params.id);
       if (!myth) {
         return res.status(404).json({ success: false, message: 'Mito/Leyenda no encontrado' });
       }
@@ -60,24 +60,61 @@ const MythController = {
   },
 
   async create(req, res) {
-    try {
-      const { user } = req;
-      const mythData = {
-        ...req.body,
-        created_by: user.id
-      };
-      
-      const newMyth = await MythModel.create(mythData);
-      res.status(201).json({ success: true, data: newMyth });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ success: false, message: 'Error al crear mito/leyenda' });
+  try {
+    const { 
+      title, 
+      content, 
+      origin_region, 
+      origin_culture, 
+      category, 
+      estimated_origin_year, 
+      featured_image 
+    } = req.body;
+
+    // Validación exhaustiva
+    if (!title || typeof title !== 'string') {
+      return res.status(400).json({ success: false, message: 'Título inválido o faltante' });
     }
-  },
+    if (!content || typeof content !== 'string') {
+      return res.status(400).json({ success: false, message: 'Contenido inválido o faltante' });
+    }
+    if (!origin_region || typeof origin_region !== 'string') {
+      return res.status(400).json({ success: false, message: 'Región de origen inválida o faltante' });
+    }
+    if (!origin_culture || typeof origin_culture !== 'string') {
+      return res.status(400).json({ success: false, message: 'Cultura de origen inválida o faltante' });
+    }
+    if (!category || !['Mito', 'Leyenda', 'Fábula', 'Tradición'].includes(category)) {
+      return res.status(400).json({ success: false, message: 'Categoría inválida o faltante' });
+    }
+
+    const mythData = {
+      title: title.trim(),
+      content: content.trim(),
+      origin_region: origin_region.trim(),
+      origin_culture: origin_culture.trim(),
+      category,
+      estimated_origin_year: estimated_origin_year ? estimated_origin_year.trim() : null,
+      featured_image: featured_image || null
+    };
+
+    console.log('Datos del mito a crear:', mythData);
+
+    const newMyth = await Myths.create(mythData);
+    res.status(201).json({ success: true, data: newMyth });
+  } catch (error) {
+    console.error('Error en create:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al crear mito/leyenda',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+},
 
   async update(req, res) {
     try {
-      const updatedMyth = await MythModel.update(req.params.id, req.body);
+      const updatedMyth = await Myths.update(req.params.id, req.body);
       res.json({ success: true, data: updatedMyth });
     } catch (error) {
       console.error(error);
@@ -87,7 +124,7 @@ const MythController = {
 
   async delete(req, res) {
     try {
-      const deleted = await MythModel.delete(req.params.id);
+      const deleted = await Myths.delete(req.params.id);
       if (!deleted) {
         return res.status(404).json({ success: false, message: 'Mito/Leyenda no encontrado' });
       }
@@ -136,7 +173,7 @@ const MythController = {
   async verifyMyth(req, res) {
     try {
       const { is_verified } = req.body;
-      const verifiedMyth = await MythModel.verifyMyth(req.params.id, is_verified);
+      const verifiedMyth = await Myths.verifyMyth(req.params.id, is_verified);
       res.json({ success: true, data: verifiedMyth });
     } catch (error) {
       console.error(error);

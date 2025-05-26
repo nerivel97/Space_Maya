@@ -62,16 +62,15 @@ api.interceptors.request.use(
 
 // Interceptor para respuestas Axios
 api.interceptors.response.use(
-  response => {
-    if (response.config.metadata) {
-      const duration = new Date() - response.config.metadata.startTime;
-      console.log(`Request to ${response.config.url} took ${duration}ms`);
-    }
-    return response.data;
-  },
+  response => response.data,
   error => {
-    // Manejo de errores (igual que antes)
-    // ...
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Redirigir a login si no está autenticado
+      if (typeof window !== 'undefined' && 
+          !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );

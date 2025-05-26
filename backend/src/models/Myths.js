@@ -4,7 +4,7 @@ const Myths = {
   async getAll() {
     const [rows] = await pool.execute(`
       SELECT * FROM myths_legends 
-      ORDER BY created_at DESC
+      ORDER BY id DESC
     `);
     return rows;
   },
@@ -17,12 +17,20 @@ const Myths = {
     return rows[0];
   },
 
-  async create({ title, content, origin_region, origin_culture, category, estimated_origin_year, featured_image, created_by }) {
+  async create({ title, content, origin_region, origin_culture, category, estimated_origin_year = null, featured_image = null }) {
     const [result] = await pool.execute(
       `INSERT INTO myths_legends 
-      (title, content, origin_region, origin_culture, category, estimated_origin_year, featured_image, created_by) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, content, origin_region, origin_culture, category, estimated_origin_year, featured_image, created_by]
+      (title, content, origin_region, origin_culture, category, estimated_origin_year, featured_image) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title,
+        content,
+        origin_region,
+        origin_culture,
+        category,
+        estimated_origin_year,
+        featured_image
+      ]
     );
     return this.getById(result.insertId);
   },

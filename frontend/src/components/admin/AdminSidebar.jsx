@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { FiHome, FiMap, FiUsers, FiSettings, FiPieChart } from 'react-icons/fi';
 import { FaBookTanakh } from "react-icons/fa6";
+import { TbVocabulary } from "react-icons/tb";
 import styles from '../../styles/admin/sidebar.module.css';
 
 const AdminSidebar = () => {
@@ -45,6 +46,17 @@ const AdminSidebar = () => {
             >
               <FaBookTanakh className={styles.icon} />
               <span>Mitos y Leyendas</span>
+            </NavLink>
+          </li>
+          <li className={styles.navItem}>
+            <NavLink 
+              to="/admin/vocabulario-panel" 
+              className={({ isActive }) => 
+                `${styles.link} ${isActive ? styles.activeLink : ''}`
+              }
+            >
+              <TbVocabulary  className={styles.icon} />
+              <span>Vocabulario</span>
             </NavLink>
           </li>
           <li className={styles.navItem}>

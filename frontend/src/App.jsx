@@ -6,10 +6,13 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Map from './pages/Mapa';
-import MythsPanel from './pages/admin/MythLegend/MythsPanel';
-
+import MythPanel from './pages/admin/MythLegend/MythPanel';
+import Miandle from './pages/Miandle';
 import Foro from './pages/Foro';
 import Perfil from './pages/Perfil';
+import VocabularioPanel from './pages/admin/VocabPanel/VocabularioPanel';
+import Vocabulario from './pages/Vocabulario';
+import JuegoMemorama from './pages/JuegoMemorama';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import './App.css';
@@ -29,18 +32,34 @@ function App() {
                 <Perfil />
               </PrivateRoute>
             } />
-            
+
             <Route path="/herramientas/mapa" element={
               <PrivateRoute>
                 <Map />
               </PrivateRoute>
             } />
-            
-            
+
+            <Route path="/herramientas/vocabulario" element={
+              <PrivateRoute>
+                <Vocabulario />
+              </PrivateRoute>
+            } />
+
+            <Route path="/herramientas/memorama" element={
+              <PrivateRoute>
+                <JuegoMemorama />
+              </PrivateRoute>
+            } />
 
             <Route path="/aprende/foro" element={
               <PrivateRoute>
                 <Foro />
+              </PrivateRoute>
+            } />
+
+            <Route path="/aprende/mitos-leyendas" element={
+              <PrivateRoute>
+                <Miandle />
               </PrivateRoute>
             } />
 
@@ -58,9 +77,16 @@ function App() {
 
             <Route path="/admin/mitos-leyendas-panel" element={
               <AdminRoute>
-                <MythsPanel />
+                <MythPanel />
               </AdminRoute>
             } />
+
+            <Route path="/admin/vocabulario-panel" element={
+              <PrivateRoute>
+                <VocabularioPanel />
+              </PrivateRoute>
+            } />
+
           </Route>
         </Routes>
       </Router>
