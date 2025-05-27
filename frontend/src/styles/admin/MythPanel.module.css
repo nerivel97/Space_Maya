@@ -441,6 +441,7 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--box-shadow);
+  padding: 50px;
 }
 
 .detailImage {

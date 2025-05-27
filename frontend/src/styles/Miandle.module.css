@@ -237,6 +237,7 @@
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--box-shadow);
+  padding: 20px;
 }
 
 .modalHeader {
@@ -249,7 +250,7 @@
 
 .modalHeader h2 {
   margin: 0;
-  color: var(--dark-color);
+  color: var(--primary-color);
 }
 
 .closeButton {
@@ -271,6 +272,7 @@
   object-fit: cover;
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
+
 }
 
 .metaInfo {
