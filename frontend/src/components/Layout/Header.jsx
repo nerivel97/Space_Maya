@@ -7,12 +7,17 @@ import styles from './Header.module.css';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, isAdmin, logout } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleProfile = () => setIsProfileOpen(!isProfileOpen);
+
+  const toggleDropdown = (dropdownName) => {
+    setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
+  };
 
   const isActive = (path) => {
     if (path === '/herramientas' && location.pathname.startsWith('/herramientas')) {
@@ -29,13 +34,26 @@ const Header = () => {
     setIsProfileOpen(false);
   };
 
+  // Datos para los dropdowns
+  const dropdownItems = {
+    aprende: [
+      { path: '/aprende/mitos-leyendas', label: 'Mitos y Leyendas' },
+      { path: '/aprende/foro', label: 'Foro' },
+    ],
+    herramientas: [
+      { path: '/herramientas/vocabulario', label: 'Vocabulario' },
+      { path: '/herramientas/mapa', label: 'Mapa Interactivo' },
+      { path: '/herramientas/memorama', label: 'Memorama' },
+    ]
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
         <Link to="/"> <img
-            src="/img/logov2.png" // cambia esto por la ruta real de tu logo
+            src="/img/logov2.png"
             alt="Logo"
-            className={styles.logo} // agrégalo al CSS para dar tamaño y estilo
+            className={styles.logo}
           /> </Link>
         <Link to="/" className={styles.brandName}>
           COOXDANICMAYA
@@ -59,22 +77,61 @@ const Header = () => {
                 Inicio
               </Link>
             </li>
-            <li className={styles.navItem}>
-              <Link
-                to="/aprende"
+            
+            {/* Dropdown Aprende */}
+            <li className={`${styles.navItem} ${styles.dropdownContainer}`}>
+              <div 
                 className={`${styles.navLink} ${isActive('/aprende') ? styles.active : ''}`}
+                onClick={() => toggleDropdown('aprende')}
               >
-                Aprende
-              </Link>
+                Aprende <FaChevronDown className={`${styles.dropdownIcon} ${activeDropdown === 'aprende' ? styles.rotate : ''}`} />
+              </div>
+              {activeDropdown === 'aprende' && (
+                <div className={styles.dropdownMenu}>
+                  {dropdownItems.aprende.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={styles.dropdownMenuItem}
+                      onClick={() => {
+                        setActiveDropdown(null);
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </li>
-            <li className={styles.navItem}>
-              <Link
-                to="/herramientas"
+            
+            {/* Dropdown Herramientas */}
+            <li className={`${styles.navItem} ${styles.dropdownContainer}`}>
+              <div 
                 className={`${styles.navLink} ${isActive('/herramientas') ? styles.active : ''}`}
+                onClick={() => toggleDropdown('herramientas')}
               >
-                Herramientas
-              </Link>
+                Herramientas <FaChevronDown className={`${styles.dropdownIcon} ${activeDropdown === 'herramientas' ? styles.rotate : ''}`} />
+              </div>
+              {activeDropdown === 'herramientas' && (
+                <div className={styles.dropdownMenu}>
+                  {dropdownItems.herramientas.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={styles.dropdownMenuItem}
+                      onClick={() => {
+                        setActiveDropdown(null);
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </li>
+            
             <li className={styles.navItem}>
               <Link
                 to="/sobre-nosotros"
@@ -92,7 +149,6 @@ const Header = () => {
               </Link>
             </li>
 
-            {/* Enlace de Admin - Solución 1: Usar null en lugar de false */}
             {isAdmin ? (
               <li className={styles.navItem}>
                 <Link
@@ -105,7 +161,6 @@ const Header = () => {
             ) : null}
           </ul>
 
-          {/* Mostrar profileContainer solo si es usuario normal (no admin) */}
           {currentUser && !isAdmin ? (
             <div className={styles.profileContainer}>
               <button
@@ -139,7 +194,6 @@ const Header = () => {
             </div>
           ) : null}
 
-          {/* Mostrar botones de auth solo si no hay usuario logueado */}
           {!currentUser ? (
             <div className={styles.authButtons}>
               <Link to="/login" className={styles.btnWhite}>Iniciar sesión</Link>
@@ -147,7 +201,6 @@ const Header = () => {
             </div>
           ) : null}
 
-          {/* Opción de logout minimalista para admin - Solución 2: Convertir a fragmento */}
           {isAdmin ? (
             <>
               <button

@@ -13,7 +13,7 @@ const Home = () => {
         <div className={styles.heroContent}>
           <h1>Descubre la riqueza de la cultura Maya</h1>
           <p>Aprende el idioma Maya a través de nuestras herramientas interactivas y sumérgete en una cultura milenaria.</p>
-          <Link to="/cursos" className={styles.btnHero}>COMENZAR AHORA</Link>
+          <Link to="#" className={styles.btnHero}>COMENZAR AHORA</Link>
         </div>
       </section>
 

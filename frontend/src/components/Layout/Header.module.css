@@ -33,7 +33,7 @@
 }
 
 .logo {
-  height: 60px;     /* ajusta al tamaño que prefieras */
+  height: 60px;
   width: auto;
   vertical-align: middle;
 }
@@ -50,7 +50,6 @@
 .mainNav {
   display: flex;
   align-items: center;
-  align-items: center;
   gap: 15px;
 }
 
@@ -62,6 +61,9 @@
 
 .navItem {
   margin: 0 10px;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .navLink {
@@ -71,6 +73,9 @@
   color: var(--light-color);
   padding: 10px 0;
   transition: var(--transition);
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .navLink::after {
@@ -92,6 +97,50 @@
 .navLink:hover,
 .navLink.active {
   color: var(--secondary-color);
+}
+
+/* Dropdown styles */
+.dropdownContainer {
+  position: relative;
+  height: 100%;
+}
+
+.navItem .navLink {
+  cursor: pointer;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  background-color: var(--primary-dark);
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+  padding: 10px 0;
+}
+
+.dropdownMenuItem {
+  display: block;
+  padding: 10px 20px;
+  color: var(--light-color);
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.dropdownMenuItem:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dropdownIcon {
+  margin-left: 5px;
+  transition: transform 0.3s;
+  font-size: 0.8rem;
+}
+
+.dropdownIcon.rotate {
+  transform: rotate(180deg);
 }
 
 .authButtons {
@@ -132,48 +181,6 @@
   border-color: var(--primary-dark);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .mobileMenuToggle {
-    display: block;
-  }
-  
-  .mainNav {
-    position: fixed;
-    top: 80px;
-    left: -100%;
-    width: 100%;
-    height: calc(100vh - 80px);
-    background-color: var(--primary-dark);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    z-index: 100;
-  }
-  
-  .mainNav.active {
-    left: 0;
-  }
-  
-  .navList {
-    flex-direction: column;
-    margin-right: 0;
-    margin-bottom: 30px;
-    text-align: center;
-  }
-  
-  .navItem {
-    margin: 10px 0;
-  }
-  
-  .authButtons {
-    flex-direction: column;
-  }
-}
-
-/* Estilos existentes... */
-
 /* Profile dropdown styles */
 .profileContainer {
   position: relative;
@@ -208,15 +215,6 @@
   gap: 4px;
 }
 
-.dropdownIcon {
-  transition: transform 0.3s;
-  font-size: 0.8rem;
-}
-
-.dropdownIcon.rotate {
-  transform: rotate(180deg);
-}
-
 .profileDropdown {
   position: absolute;
   right: 0;
@@ -246,7 +244,8 @@
 .dropdownItem:hover {
   background-color: #f5f5f5;
 }
-/* Icono de admin */
+
+/* Admin icon */
 .adminIcon {
   margin-right: 6px;
   vertical-align: middle;
@@ -269,24 +268,97 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Asegurar que no haya ceros visibles */
-.navList:empty {
-  display: none;
-}
-
-/* Para móviles: ajustar el menú admin */
+/* Responsive styles */
 @media (max-width: 768px) {
-  .navList li {
+  .mobileMenuToggle {
+    display: block;
+  }
+  
+  .mainNav {
+    position: fixed;
+    top: 80px;
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - 80px);
+    background-color: var(--primary-dark);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: var(--transition);
+    z-index: 100;
+    padding-top: 20px;
+    overflow-y: auto;
+  }
+  
+  .mainNav.active {
+    left: 0;
+  }
+  
+  .navList {
+    flex-direction: column;
+    margin-right: 0;
+    margin-bottom: 20px;
+    text-align: center;
     width: 100%;
   }
   
-  .adminIcon {
-    display: inline-block;
+  .navItem {
+    margin: 5px 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+  }
+  
+  .navLink {
+    padding: 15px 20px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .dropdownContainer {
+    width: 100%;
+  }
+  
+  .dropdownMenu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+    display: none;
+  }
+  
+  .dropdownContainer:hover .dropdownMenu,
+  .dropdownMenu.active {
+    display: block;
+  }
+  
+  .authButtons {
+    flex-direction: column;
+    width: 100%;
+    padding: 0 20px;
+  }
+  
+  .btnWhite, .btnPrimary {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .profileContainer {
+    width: 100%;
+    margin-left: 0;
+    padding: 0 20px;
+  }
+  
+  .profileButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .profileDropdown {
+    position: static;
+    width: 100%;
+    margin-top: 5px;
   }
 }
-
-/* Asegurar que el dropdown no se solape con otros elementos */
-.profileDropdown {
-  z-index: 1000;
-}
-

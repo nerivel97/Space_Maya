@@ -61,37 +61,10 @@ const Miandle = () => {
     const indexOfFirstMyth = indexOfLastMyth - mythsPerPage;
     const currentMyths = filteredMyths.slice(indexOfFirstMyth, indexOfLastMyth);
 
-    // Exportar a CSV
-    const exportToCSV = () => {
-        const headers = ['Título', 'Categoría', 'Región de Origen', 'Cultura de Origen', 'Año Estimado'];
-        const data = myths.map(myth => [
-            `"${myth.title}"`,
-            `"${myth.category}"`,
-            `"${myth.origin_region}"`,
-            `"${myth.origin_culture}"`,
-            `"${myth.estimated_origin_year || 'Desconocido'}"`
-        ]);
-
-        let csvContent = "data:text/csv;charset=utf-8," 
-            + headers.join(",") + "\n" 
-            + data.map(row => row.join(",")).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "mitos_y_leyendas.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
     return (
             <div className={styles.container}>
                 <div className={styles.header}>
                     <h1>Mitos y Leyendas</h1>
-                    <button className={styles.exportButton} onClick={exportToCSV}>
-                        Exportar a CSV
-                    </button>
                 </div>
 
                 {error && <div className={styles.error}>{error}</div>}
