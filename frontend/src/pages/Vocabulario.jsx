@@ -21,6 +21,10 @@ const Vocabulario = () => {
 
   const categories = ['Sustantivo', 'Verbo', 'Adjetivo', 'Frase', 'Otro'];
 
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
+
   const fetchVocabulario = async () => {
     try {
       setLoading(true);

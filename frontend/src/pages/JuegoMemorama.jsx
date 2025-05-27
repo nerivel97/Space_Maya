@@ -22,6 +22,10 @@ const JuegoMemorama = () => {
   const [intentos, setIntentos] = useState(0);
   const [juegoCompletado, setJuegoCompletado] = useState(false);
 
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
+
   // Inicializar juego
   const iniciarJuego = () => {
     // Duplicar y mezclar las cartas

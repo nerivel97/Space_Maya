@@ -5,12 +5,17 @@ import styles from '../styles/Register.module.css';
 
 // Avatares predeterminados
 const defaultAvatars = [
-  { id: 1, url: '/img/logov1.png', name: 'Avatar 1' },
-  { id: 2, url: '/img/logov1.png', name: 'Avatar 2' },
-  { id: 3, url: '/img/logov1.png', name: 'Avatar 3' },
-  { id: 4, url: '/img/user.jpg', name: 'Avatar 4' },
-  { id: 5, url: '/img/logov1.png', name: 'Avatar 5' },
-  { id: 6, url: '/img/logov1.png', name: 'Avatar 6' },
+  { id: 1, url: '/perfiles/calendariomaya.png', name: 'Avatar 1' },
+  { id: 2, url: '/perfiles/diosamaya.png', name: 'Avatar 2' },
+  { id: 3, url: '/perfiles/diosmaya.png', name: 'Avatar 3' },
+  { id: 4, url: '/perfiles/ixchel.png', name: 'Avatar 4' },
+  { id: 5, url: '/perfiles/jabali.png', name: 'Avatar 5' },
+  { id: 6, url: '/perfiles/jaguar.png', name: 'Avatar 6' },
+  { id: 7, url: '/perfiles/penacho.png', name: 'Avatar 7' },
+  { id: 8, url: '/perfiles/piramide.png', name: 'Avatar 8' },
+  { id: 9, url: '/perfiles/tortuga.png', name: 'Avatar 9' },
+  { id: 10, url: '/perfiles/xtabay.png', name: 'Avatar 10' },
+
 ];
 
 export default function Register() {

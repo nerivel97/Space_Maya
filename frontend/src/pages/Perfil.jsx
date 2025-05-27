@@ -30,6 +30,10 @@ export default function Perfil() {
   const navigate = useNavigate();
 
   useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const userData = await api.get(`/auth/profile/${currentUser.id}`);

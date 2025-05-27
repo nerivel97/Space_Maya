@@ -57,14 +57,6 @@ const Home = () => {
         <div className={styles.container}>
           <h2 className={styles.sectionTitle}>Aprende con ...</h2>
           <div className={styles.featuresGrid}>
-            <div className={styles.featureCard}>
-              <div className={styles.cardIcon}>
-                <FaBookTanakh />
-              </div>
-              <h3 className={styles.cardTitle}>.....</h3>
-              <p className={styles.cardText}>Amplía tu conocimiento y conoce los mitos mas conocidos de la region.</p>
-              <Link to="/" className={styles.cardLink}>Explorar <FaArrowRight className={styles.arrowIcon} /></Link>
-            </div>
             
             <div className={styles.featureCard}>
               <div className={styles.cardIcon}>

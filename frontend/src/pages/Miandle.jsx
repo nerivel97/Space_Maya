@@ -21,6 +21,9 @@ const Miandle = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const mythsPerPage = 6;
     
+    useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
     // Obtener mitos al cargar el componente
     useEffect(() => {
         fetchMyths();
