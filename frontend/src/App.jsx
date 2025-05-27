@@ -15,6 +15,7 @@ import Vocabulario from './pages/Vocabulario';
 import JuegoMemorama from './pages/JuegoMemorama';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
+import SobreNosotros from './pages/SobreNosotros';
 import './App.css';
 
 function App() {
@@ -26,6 +27,8 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="sobre-nosotros" element={<SobreNosotros />} />
+
 
             <Route path="/perfil" element={
               <PrivateRoute>

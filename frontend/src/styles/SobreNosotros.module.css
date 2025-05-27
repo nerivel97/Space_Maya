@@ -1,0 +1,380 @@
+/* Base Styles */
+.aboutContainer {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  line-height: 1.6;
+  margin-top: 50px;
+}
+
+.sectionContainer {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.sectionTitle {
+  color: var(--primary-color);
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+  position: relative;
+  display: inline-block;
+}
+
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background-color: var(--secondary-color);
+  border-radius: 2px;
+}
+
+.sectionText {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: var(--dark-color);
+}
+
+/* Hero Section */
+.heroSection {
+  height: 60vh;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  color: var(--light-color);
+  margin-bottom: 60px;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  padding: 0 20px;
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: fadeInDown 1s ease;
+}
+
+.heroSubtitle {
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 1s ease;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  opacity: 0.7;
+  z-index: 1;
+}
+
+/* Mission Section */
+.missionSection {
+  padding: 80px 0;
+  background-color: var(--gray-color);
+}
+
+.missionContent {
+  flex: 1;
+}
+
+.missionImage {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.missionIcon {
+  font-size: 10rem;
+  color: var(--primary-color);
+  opacity: 0.8;
+  transition: var(--transition);
+}
+
+.missionIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Values Section */
+.valuesSection {
+  padding: 80px 0;
+  background-color: var(--light-color);
+  text-align: center;
+}
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.valueCard {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 30px 20px;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+}
+
+.valueCard:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.valueIconContainer {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.valueCard:hover .valueIconContainer {
+  background-color: var(--secondary-color);
+  transform: rotate(15deg) scale(1.1);
+}
+
+.valueIcon {
+  font-size: 2.5rem;
+  color: var(--light-color);
+}
+
+.valueTitle {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+}
+
+.valueDescription {
+  color: var(--text-color);
+}
+
+/* History Section */
+.historySection {
+  padding: 80px 0;
+  background-color: var(--gray-color);
+}
+
+.historyImage {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.historyIcon {
+  font-size: 10rem;
+  color: var(--secondary-color);
+  opacity: 0.8;
+  transition: var(--transition);
+}
+
+.historyIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Programs Section */
+.programsSection {
+  padding: 80px 0;
+  background-color: var(--light-color);
+  text-align: center;
+}
+
+.programsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.programCard {
+  background-color: var(--light-color);
+  border-radius: var(--border-radius);
+  padding: 40px 30px;
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  border-top: 4px solid var(--primary-color);
+}
+
+.programCard:hover {
+  transform: translateY(-10px);
+  border-top-color: var(--secondary-color);
+}
+
+.programIcon {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.programCard:hover .programIcon {
+  color: var(--secondary-color);
+}
+
+.programTitle {
+  color: var(--primary-dark);
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+}
+
+.programDescription {
+  color: var(--text-color);
+}
+
+/* Contact Section */
+.contactSection {
+  padding: 80px 0;
+  background-color: var(--primary-color);
+  color: var(--light-color);
+  text-align: center;
+}
+
+.contactSection .sectionTitle {
+  color: var(--light-color);
+}
+
+.contactSection .sectionTitle::after {
+  background-color: var(--secondary-color);
+}
+
+.contactGrid {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 50px;
+  text-align: left;
+}
+
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.contactIcon {
+  font-size: 1.5rem;
+  color: var(--secondary-color);
+  min-width: 30px;
+}
+
+.socialMedia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.socialTitle {
+  font-size: 1.5rem;
+  color: var(--light-color);
+}
+
+.socialIcons {
+  display: flex;
+  gap: 20px;
+}
+
+.socialLink {
+  color: var(--light-color);
+  font-size: 1.8rem;
+  transition: var(--transition);
+}
+
+.socialLink:hover {
+  color: var(--secondary-color);
+  transform: translateY(-5px);
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .sectionContainer {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  
+  .heroSubtitle {
+    font-size: 1.2rem;
+  }
+  
+  .missionIcon, .historyIcon {
+    font-size: 6rem;
+  }
+  
+  .valuesGrid, .programsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .contactGrid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .contactItem, .socialMedia {
+    align-items: center;
+    text-align: center;
+  }
+}
