@@ -59,39 +59,6 @@ const AdminSidebar = () => {
               <span>Vocabulario</span>
             </NavLink>
           </li>
-          <li className={styles.navItem}>
-            <NavLink 
-              to="/admin/users" 
-              className={({ isActive }) => 
-                `${styles.link} ${isActive ? styles.activeLink : ''}`
-              }
-            >
-              <FiUsers className={styles.icon} />
-              <span>Usuarios</span>
-            </NavLink>
-          </li>
-          <li className={styles.navItem}>
-            <NavLink 
-              to="/admin/analytics" 
-              className={({ isActive }) => 
-                `${styles.link} ${isActive ? styles.activeLink : ''}`
-              }
-            >
-              <FiPieChart className={styles.icon} />
-              <span>Analíticas</span>
-            </NavLink>
-          </li>
-          <li className={styles.navItem}>
-            <NavLink 
-              to="/admin/settings" 
-              className={({ isActive }) => 
-                `${styles.link} ${isActive ? styles.activeLink : ''}`
-              }
-            >
-              <FiSettings className={styles.icon} />
-              <span>Configuración</span>
-            </NavLink>
-          </li>
         </ul>
       </nav>
     </aside>

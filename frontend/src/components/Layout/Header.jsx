@@ -140,14 +140,6 @@ const Header = () => {
                 Sobre Nosotros
               </Link>
             </li>
-            <li className={styles.navItem}>
-              <Link
-                to="/contacto"
-                className={`${styles.navLink} ${isActive('/contacto') ? styles.active : ''}`}
-              >
-                Contacto
-              </Link>
-            </li>
 
             {isAdmin ? (
               <li className={styles.navItem}>
