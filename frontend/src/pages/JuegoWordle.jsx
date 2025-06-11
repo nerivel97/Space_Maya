@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WORDS } from '../../public/words';
+import api from '../api/api'; // Importa tu archivo api.js directamente
 import styles from '../styles/Wordle.module.css';
 
 const Wordle = () => {
@@ -13,16 +13,35 @@ const Wordle = () => {
   const [message, setMessage] = useState('');
   const [currentTranslation, setCurrentTranslation] = useState('');
   const [guessTranslation, setGuessTranslation] = useState('');
+  const [wordsList, setWordsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    startNewGame();
+    fetchWordsFromDB();
   }, []);
 
-  const startNewGame = () => {
-    const randomEntry = WORDS[Math.floor(Math.random() * WORDS.length)];
-    setCorrectWord(randomEntry.es.toUpperCase());
-    setCurrentTranslation(randomEntry.maya.toUpperCase());
-    setWordLength(randomEntry.es.length);
+  // Función para obtener palabras de la base de datos
+  const fetchWordsFromDB = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/words'); // Usa tu instancia de api directamente
+      setWordsList(response.data);
+      startNewGame(response.data);
+    } catch (error) {
+      console.error('Error fetching words:', error);
+      setMessage('Error al cargar palabras');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startNewGame = (words = wordsList) => {
+    if (words.length === 0) return;
+    
+    const randomEntry = words[Math.floor(Math.random() * words.length)];
+    setCorrectWord(randomEntry.palabra_es.toUpperCase());
+    setCurrentTranslation(randomEntry.palabra_maya.toUpperCase());
+    setWordLength(randomEntry.palabra_es.length);
     setGuesses(Array(6).fill({ word: '', translation: '' }));
     setCurrentGuess('');
     setCurrentRow(0);
@@ -33,18 +52,22 @@ const Wordle = () => {
   };
 
   const updateGuessTranslation = (guess) => {
-    const found = WORDS.find(word => word.es.toUpperCase() === guess);
-    setGuessTranslation(found ? found.maya.toUpperCase() : '');
+    const found = wordsList.find(word => 
+      word.palabra_es.toUpperCase() === guess
+    );
+    setGuessTranslation(found ? found.palabra_maya.toUpperCase() : '');
   };
 
   const handleKeyDown = (e) => {
-    if (gameOver) return;
+    if (gameOver || loading) return;
 
     const key = e.key.toUpperCase();
 
     if (key === 'ENTER') {
       if (currentGuess.length === wordLength) {
-        const match = WORDS.find(word => word.es.toUpperCase() === currentGuess);
+        const match = wordsList.find(word => 
+          word.palabra_es.toUpperCase() === currentGuess
+        );
 
         if (!match) {
           setMessage('Palabra no válida');
@@ -55,7 +78,7 @@ const Wordle = () => {
         const newGuesses = [...guesses];
         newGuesses[currentRow] = {
           word: currentGuess,
-          translation: match.maya.toUpperCase()
+          translation: match.palabra_maya.toUpperCase()
         };
         setGuesses(newGuesses);
         setGuessTranslation('');
@@ -99,7 +122,7 @@ const Wordle = () => {
       setCurrentGuess(updated);
       updateGuessTranslation(updated);
       setMessage('');
-    } else if (/^[A-Z]$/.test(key) && currentGuess.length < wordLength) {
+    } else if (/^[A-ZÁÉÍÓÚÜÑ]$/i.test(key) && currentGuess.length < wordLength) {
       const updated = currentGuess + key;
       setCurrentGuess(updated);
       updateGuessTranslation(updated);
@@ -112,7 +135,7 @@ const Wordle = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentGuess, gameOver]);
+  }, [currentGuess, gameOver, loading]);
 
   const getLetterState = (row, col) => {
     const guess = guesses[row].word;
@@ -127,6 +150,15 @@ const Wordle = () => {
   const handleVirtualKeyPress = (key) => {
     handleKeyDown({ key });
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Wordle Maya</h1>
+        <div className={styles.message}>Cargando palabras...</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -218,7 +250,7 @@ const Wordle = () => {
         </div>
       </div>
 
-      <button className={styles.newGameButton} onClick={startNewGame}>
+      <button className={styles.newGameButton} onClick={() => startNewGame(wordsList)}>
         Nuevo Juego
       </button>
     </div>

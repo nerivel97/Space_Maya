@@ -14,6 +14,7 @@ import VocabularioPanel from './pages/admin/VocabPanel/VocabularioPanel';
 import Vocabulario from './pages/Vocabulario';
 import JuegoMemorama from './pages/JuegoMemorama';
 import Wordle from './pages/juegoWordle';
+import PalabrasPanel from './pages/admin/PalabrasPanel/PalabrasPanel';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import SobreNosotros from './pages/SobreNosotros';
@@ -94,6 +95,12 @@ function App() {
             <Route path="/admin/vocabulario-panel" element={
               <PrivateRoute>
                 <VocabularioPanel />
+              </PrivateRoute>
+            } />
+
+            <Route path="/admin/palabras-panel" element={
+              <PrivateRoute>
+                <PalabrasPanel />
               </PrivateRoute>
             } />
 

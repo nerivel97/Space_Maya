@@ -1,0 +1,53 @@
+.wordList {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.wordList table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.wordList th, .wordList td {
+  padding: 0.75rem;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.wordList th {
+  text-align: center;
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.wordList tr:hover {
+  background-color: #f9f9f9;
+}
+
+.editButton {
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.editButton:hover {
+  background-color: #0b7dda;
+}
+
+.deleteButton {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background-color: #d32f2f;
+}
