@@ -44,6 +44,7 @@ const Header = () => {
       { path: '/herramientas/vocabulario', label: 'Vocabulario' },
       { path: '/herramientas/mapa', label: 'Mapa Interactivo' },
       { path: '/herramientas/memorama', label: 'Memorama' },
+      { path: '/herramientas/wordle', label: 'Wordle' },
     ]
   };
 

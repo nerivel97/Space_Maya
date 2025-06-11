@@ -13,6 +13,7 @@ import Perfil from './pages/Perfil';
 import VocabularioPanel from './pages/admin/VocabPanel/VocabularioPanel';
 import Vocabulario from './pages/Vocabulario';
 import JuegoMemorama from './pages/JuegoMemorama';
+import Wordle from './pages/juegoWordle';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminMapPanel from './pages/admin/MapPanel/MapPanel';
 import SobreNosotros from './pages/SobreNosotros';
@@ -51,6 +52,12 @@ function App() {
             <Route path="/herramientas/memorama" element={
               <PrivateRoute>
                 <JuegoMemorama />
+              </PrivateRoute>
+            } />
+
+            <Route path="/herramientas/wordle" element={
+              <PrivateRoute>
+                <Wordle />
               </PrivateRoute>
             } />
 
