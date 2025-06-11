@@ -6,11 +6,17 @@ import WordForm from './WordForm';
 import styles from '../../../styles/admin/PalabrasPanel.module.css';
 
 const PalabrasPanel = () => {
-  const [words, setWords] = useState([]);
+  const [allWords, setAllWords] = useState([]); // Todas las palabras
+  const [currentPageWords, setCurrentPageWords] = useState([]); // Palabras de la página actual
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingWord, setEditingWord] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10, // Número de palabras por página
+    total: 0
+  });
   const [filters, setFilters] = useState({
     search: '',
     length: ''
@@ -18,13 +24,25 @@ const PalabrasPanel = () => {
 
   useEffect(() => {
     fetchWords();
-  }, [filters]);
+  }, [filters]); // Solo dependemos de los filtros ahora
+
+  // Actualizar palabras visibles cuando cambia la paginación o las palabras
+  useEffect(() => {
+    updateVisibleWords();
+  }, [pagination.page, pagination.limit, allWords]);
 
   const fetchWords = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/words', { params: filters });
-      setWords(response.data);
+      const response = await api.get('/words', { 
+        params: filters 
+      });
+      setAllWords(response.data);
+      setPagination(prev => ({
+        ...prev,
+        total: response.data.length,
+        page: 1 // Resetear a primera página al obtener nuevos datos
+      }));
       setError(null);
     } catch (err) {
       setError('Error al cargar las palabras');
@@ -32,6 +50,12 @@ const PalabrasPanel = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateVisibleWords = () => {
+    const start = (pagination.page - 1) * pagination.limit;
+    const end = start + pagination.limit;
+    setCurrentPageWords(allWords.slice(start, end));
   };
 
   const handleCreate = () => {
@@ -69,6 +93,10 @@ const PalabrasPanel = () => {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
   return (
     <AdminLayout>
       <div className={styles.palabrasPanel}>
@@ -104,9 +132,22 @@ const PalabrasPanel = () => {
                 onChange={(e) => setFilters({...filters, length: e.target.value})}
               >
                 <option value="">Todas las longitudes</option>
-                {[3, 4, 5, 6].map(len => (
+                {[3, 4, 5, 6, 7, 8, 9, 10].map(len => (
                   <option key={len} value={len}>{len} caracteres</option>
                 ))}
+              </select>
+              <select
+                value={pagination.limit}
+                onChange={(e) => setPagination(prev => ({
+                  ...prev,
+                  limit: Number(e.target.value),
+                  page: 1 // Resetear a página 1 al cambiar el límite
+                }))}
+              >
+                <option value={10}>10 por página</option>
+                <option value={20}>20 por página</option>
+                <option value={50}>50 por página</option>
+                <option value={100}>100 por página</option>
               </select>
             </div>
 
@@ -115,11 +156,33 @@ const PalabrasPanel = () => {
             ) : error ? (
               <div className={styles.error}>{error}</div>
             ) : (
-              <WordList
-                words={words}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
+              <>
+                <div className={styles.summary}>
+                  Mostrando {currentPageWords.length} de {allWords.length} palabras
+                </div>
+                <WordList
+                  words={currentPageWords}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+                <div className={styles.pagination}>
+                  <button
+                    disabled={pagination.page === 1}
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                  >
+                    Anterior
+                  </button>
+                  <span>
+                    Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
+                  </span>
+                  <button
+                    disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </>
             )}
           </>
         )}
